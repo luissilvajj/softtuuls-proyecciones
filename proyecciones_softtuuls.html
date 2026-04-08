@@ -417,8 +417,8 @@
           <span class="bar-label">Escenario base</span>
           <div class="scen-btns">
             <button class="scen-btn pesi" data-scen="pesi" onclick="setScenario('pesi')">
-              <span class="sn">Pesimista (Latam)</span>
-              <span class="sd">Churn 12% · Crecimiento 0</span>
+              <span class="sn">Pesimista (Recuperación)</span>
+              <span class="sd">Churn 12% · Crecimiento lento</span>
             </button>
             <button class="scen-btn real active" data-scen="real" onclick="setScenario('real')">
               <span class="sn">Realista (Pyme)</span>
@@ -801,7 +801,7 @@ const SCENARIOS = {
   // - High baseline churn in pessimistic due to economic instability
   // - Lower ad spend (CPC is cheaper, but conversion is harder)
   // - Realistic growth is slower initially
-  pesi: { precio:30, c1:2,  crec:0, churn:12, inv:10200, conta:250, pub:150,  infra:80,  gap:35, s1:250, u1:30, s2:250, u2:70, s3:500, u3:150 },
+  pesi: { precio:30, c1:5,  crec:1, churn:12, inv:10200, conta:250, pub:200,  infra:80,  gap:30, s1:250, u1:30, s2:250, u2:70, s3:500, u3:150 },
   real: { precio:30, c1:4,  crec:1, churn:6,  inv:10200, conta:300, pub:300,  infra:100, gap:25, s1:250, u1:25, s2:300, u2:60, s3:600, u3:120 },
   opti: { precio:30, c1:7,  crec:2, churn:3,  inv:10200, conta:300, pub:500,  infra:100, gap:15, s1:300, u1:20, s2:300, u2:50, s3:800, u3:100 },
 };
