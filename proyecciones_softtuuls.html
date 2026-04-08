@@ -342,9 +342,8 @@
         </div>
         <div>
           <span class="ctrl-lbl">Impuestos sobre utilidad / IVA</span>
-          <div class="ctrl-val" id="v-tax">15%</div>
-          <input type="range" id="tax" min="0" max="40" step="1" value="15" />
-          <div class="ctrl-hint">Carga fiscal estimada sobre beneficios netos</div>
+          <div class="ctrl-val" id="v-tax">16%</div>
+          <div class="ctrl-hint">Fijo por normativa local (Venezuela)</div>
         </div>
       </div>
     </div>
@@ -816,7 +815,7 @@ function getParams() {
   return {
     inversion: v('inv'), precio: v('precio'),
     c1: v('c1'),         crec: v('crec'), churn: v('churn'),
-    tax: v('tax'),       conta: v('conta'),   pub: v('pub'),   infra: v('infra'),
+    tax: 16,             conta: v('conta'),   pub: v('pub'),   infra: v('infra'),
     sal1: v('s1'), umbral1: v('u1'),
     sal2: v('s2'), umbral2: v('u2'),
     sal3: v('s3'), umbral3: v('u3'),
@@ -1056,7 +1055,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   $('fecha').textContent = new Date().toLocaleDateString('es-VE',{day:'2-digit',month:'long',year:'numeric'});
   initCharts();
   setScenario('real');
-  ['precio','c1','crec','churn','inv','conta','pub','infra','tax','s1','u1','s2','u2','s3','u3'].forEach(id=>{
+  ['precio','c1','crec','churn','inv','conta','pub','infra','s1','u1','s2','u2','s3','u3'].forEach(id=>{
     const el = $(id);
     if(el) el.addEventListener('input',actualizar);
   });
