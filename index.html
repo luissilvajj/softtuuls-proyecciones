@@ -36,6 +36,24 @@
 
     /* ── Layout ── */
     main { max-width:1420px; margin:0 auto; padding:26px 28px 80px; }
+    .view-nav { display:flex; gap:10px; margin-bottom:24px; }
+    .nav-btn { background:var(--s1); border:1px solid var(--bdr); border-radius:10px; padding:10px 20px; cursor:pointer; font-family:'Inter',sans-serif; font-size:.75rem; font-weight:600; color:var(--tm); transition:all .2s; }
+    .nav-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .nav-btn:not(.active):hover { background:var(--s2); color:var(--tp); }
+
+    .view-section { display:none; animation:fu .35s ease both; }
+    .view-section.active { display:block; }
+    
+    .setup-action { display:flex; justify-content:flex-end; margin-top:16px; margin-bottom: 20px; }
+    .run-sim-btn { background:var(--accent); color:#fff; font-size:.9rem; font-family:'Inter',sans-serif; font-weight:700; border:none; border-radius:12px; padding:16px 40px; cursor:pointer; transition:transform .15s, box-shadow .15s; }
+    .run-sim-btn:hover { transform:translateY(-2px); box-shadow:0 10px 25px rgba(37,99,235,.25); }
+
+    @media print {
+      header, .view-nav, .export-btn, .setup-action, .advisory { display: none !important; }
+      body { background: #fff !important; color: #000 !important; }
+      .chart-card, .timeline-card, .table-card { page-break-inside: avoid; border:1px solid #ccc; box-shadow:none; }
+      #view-dash { display:block !important; } #view-config { display:none !important; }
+    }
 
     /* ── Top bar: period + scenario ── */
     .top-bar { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; flex-wrap:wrap; }
@@ -254,42 +272,15 @@
 
 <main>
 
-  <!-- ── Top bar: period + scenario ── -->
-  <div class="top-bar">
-    <div class="bar-controls" style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
-      <div class="bar-group">
-        <span class="bar-label">Horizonte</span>
-        <div class="period-btns">
-          <button class="period-btn active" data-meses="12" onclick="setPeriod(12)">1 Año</button>
-          <button class="period-btn"        data-meses="24" onclick="setPeriod(24)">2 Años</button>
-          <button class="period-btn"        data-meses="36" onclick="setPeriod(36)">3 Años</button>
-        </div>
-      </div>
-      <div class="bar-group">
-        <span class="bar-label">Escenario base</span>
-        <div class="scen-btns">
-          <button class="scen-btn pesi" data-scen="pesi" onclick="setScenario('pesi')">
-            <span class="sn">Pesimista (Latam/VE)</span>
-            <span class="sd">Churn 12% · 2 clientes/mes<br>Sin crecimiento de ventas</span>
-          </button>
-          <button class="scen-btn real active" data-scen="real" onclick="setScenario('real')">
-            <span class="sn">Realista (Pyme Local)</span>
-            <span class="sd">Churn 6% · 4 clientes/mes<br>+1 cliente adicional/mes</span>
-          </button>
-          <button class="scen-btn opti" data-scen="opti" onclick="setScenario('opti')">
-            <span class="sn">Optimista (Expansión)</span>
-            <span class="sd">Churn 3% · 7 clientes/mes<br>+2 clientes adicionales/mes</span>
-          </button>
-        </div>
-      </div>
-    </div>
-    <button class="export-btn" onclick="downloadCSV()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Exportar CSV
-    </button>
+  <div class="view-nav">
+    <button id="nav-config" class="nav-btn active" onclick="switchView('config')">⚙️ Configuración</button>
+    <button id="nav-dash" class="nav-btn" onclick="switchView('dash')">📊 Dashboard Inversor</button>
   </div>
 
-  <!-- ── Controls ── -->
+  <section id="view-config" class="view-section active">
+  
+    <!-- ── Controls ── -->
+
   <div class="controls-wrap">
 
     <div class="ctrl-sec">
@@ -345,6 +336,12 @@
           <div class="ctrl-val" id="v-tax">16%</div>
           <div class="ctrl-hint">Fijo por normativa local (Venezuela)</div>
         </div>
+        <div>
+          <span class="ctrl-lbl">Brecha cambiaria (Paralelo vs BCV)</span>
+          <div class="ctrl-val" id="v-gap">25%</div>
+          <input type="range" id="gap" min="0" max="40" step="1" value="25" />
+          <div class="ctrl-hint">Pérdida de poder adquisitivo del ingreso en moneda local</div>
+        </div>
       </div>
     </div>
 
@@ -396,9 +393,59 @@
       </div>
     </div>
 
+  </div> <!-- End controls-wrap -->
+  
+  <div class="setup-action">
+    <button class="run-sim-btn" onclick="switchView('dash')">📊 Correr Simulación</button>
   </div>
+  </section>
 
-  <!-- ── Advisory ── -->
+  <section id="view-dash" class="view-section">
+  
+    <!-- ── Top bar: period + scenario ── -->
+    <div class="top-bar">
+      <div class="bar-controls" style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+        <div class="bar-group">
+          <span class="bar-label">Horizonte</span>
+          <div class="period-btns">
+            <button class="period-btn active" data-meses="12" onclick="setPeriod(12)">1 Año</button>
+            <button class="period-btn"        data-meses="24" onclick="setPeriod(24)">2 Años</button>
+            <button class="period-btn"        data-meses="36" onclick="setPeriod(36)">3 Años</button>
+          </div>
+        </div>
+        <div class="bar-group">
+          <span class="bar-label">Escenario base</span>
+          <div class="scen-btns">
+            <button class="scen-btn pesi" data-scen="pesi" onclick="setScenario('pesi')">
+              <span class="sn">Pesimista (Latam)</span>
+              <span class="sd">Churn 12% · Crecimiento 0</span>
+            </button>
+            <button class="scen-btn real active" data-scen="real" onclick="setScenario('real')">
+              <span class="sn">Realista (Pyme)</span>
+              <span class="sd">Churn 6% · Crecimiento constante</span>
+            </button>
+            <button class="scen-btn opti" data-scen="opti" onclick="setScenario('opti')">
+              <span class="sn">Optimista (Escalamiento)</span>
+              <span class="sd">Churn 3% · Crecimiento acelerado</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button class="export-btn" onclick="shareScenario()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+          Compartir Link
+        </button>
+        <button class="export-btn" onclick="window.print()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+          Imprimir PDF
+        </button>
+        <button class="export-btn" onclick="downloadCSV()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Datos CSV
+        </button>
+      </div>
+    </div>
   <div class="advisory good" id="advisory">
     <div class="adv-dot"></div>
     <div>
@@ -423,12 +470,11 @@
     </div>
   </div>
 
-  <!-- ── KPI Grid ── -->
-  <div class="kpi-grid">
+  <div class="kpi-grid" style="grid-template-columns: repeat(5,1fr);">
     <div class="kpi-card">
-      <div class="kpi-lbl"><span class="term" data-term="mrr">MRR</span> Mes <span id="k-mes-lbl">12</span></div>
+      <div class="kpi-lbl"><span class="term" data-term="mrr">MRR Nominal</span> <span id="k-mes-lbl">12</span></div>
       <div class="kpi-val a" id="k-mrr">$0</div>
-      <div class="kpi-sub">Ingreso recurrente mensual</div>
+      <div class="kpi-sub">Ingreso base facturado</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-lbl"><span class="term" data-term="margin">Margen Bruto</span></div>
@@ -445,9 +491,14 @@
       <div class="kpi-val" id="k-rule40">0%</div>
       <div class="kpi-sub">Crecimiento + Margen</div>
     </div>
+    <div class="kpi-card" style="border-color:var(--pos);">
+      <div class="kpi-lbl"><span class="term" data-term="runway">Runway</span> Cash</div>
+      <div class="kpi-val" id="k-runway">∞</div>
+      <div class="kpi-sub">Meses de supervivencia</div>
+    </div>
   </div>
 
-  <div class="kpi-grid">
+  <div class="kpi-grid" style="grid-template-columns: repeat(4,1fr);">
     <div class="kpi-card">
       <div class="kpi-lbl">Clientes Activos</div>
       <div class="kpi-val p" id="k-c12">0</div>
@@ -523,6 +574,8 @@
       </table>
     </div>
   </div>
+
+  </section> <!-- End view-dash -->
 
 </main>
 
@@ -626,8 +679,75 @@ const GLOSSARY = {
     formula: 'Ratio = % Crecimiento Mensual + % Margen EBITDA',
     example: 'Crecimiento 15%, Margen EBITDA 30% → Suma = 45% (Pasa la regla)',
     bench: '> 40% es señal de una empresa excepcionalmente eficiente.'
+  },
+  runway: {
+    title: 'Runway — Pista de Aterrizaje Financiera',
+    def: 'La cantidad de meses que tu empresa puede sobrevivir con el balance de efectivo actual antes de quedarse sin dinero si asumes que los ingresos paran o el flujo es negativo.',
+    formula: 'Runway = Balance Acumulado Actual ÷ Costos Mensuales Promedio (Burn Rate)',
+    example: 'Si tienes $15,000 acumulados y pierdes -$3,000/mes → Runway = 5 meses',
+    bench: 'Un Runway de 12-18 meses es considerado saludable para startups. Menos de 6 meses indica un riesgo alto de insolvencia y requiere levantar capital.'
   }
 };
+
+function shareScenario() {
+  const p = getParams();
+  p.period = globalMeses;
+  p.hiring = activeHiringMode;
+  p.scenario = activeScenario;
+  const hash = btoa(JSON.stringify(p));
+  const url = window.location.origin + window.location.pathname + '#' + hash;
+  navigator.clipboard.writeText(url).then(() => {
+    alert("¡Enlace único copiado al portapapeles! Envíaselo al inversor.");
+  });
+}
+
+function saveScenario() {
+  const p = getParams();
+  p.period = globalMeses;
+  p.hiring = activeHiringMode;
+  p.scenario = activeScenario;
+  try { localStorage.setItem('softtuuls_model', JSON.stringify(p)); } catch(e) {}
+}
+
+function loadScenario() {
+  let p = null;
+  if (window.location.hash.length > 1) {
+    try { p = JSON.parse(atob(window.location.hash.substring(1))); } catch(e) {}
+  }
+  if (!p) {
+    try { const saved = localStorage.getItem('softtuuls_model'); if (saved) p = JSON.parse(saved); } catch (e) {}
+  }
+  
+  if (p) {
+    if (p.scenario) setScenario(p.scenario, true);
+    
+    // Apply exact custom values overriding the scenario presets
+    const v = (id, val) => { const el = $(id); if (el && val !== undefined) el.value = val; };
+    v('inv', p.inversion); v('precio', p.precio);
+    v('c1', p.c1); v('crec', p.crec); v('churn', p.churn);
+    v('conta', p.conta); v('pub', p.pub); v('infra', p.infra);
+    v('gap', p.gap !== undefined ? p.gap : 25);
+    v('s1', p.sal1); v('u1', p.umbral1);
+    v('s2', p.sal2); v('u2', p.umbral2);
+    v('s3', p.sal3); v('u3', p.umbral3);
+    
+    if (p.period) setPeriod(p.period);
+    if (p.hiring) setHiringMode(p.hiring);
+    return true;
+  }
+  return false;
+}
+
+function switchView(view) {
+  document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById(`view-${view}`).classList.add('active');
+  document.getElementById(`nav-${view}`).classList.add('active');
+  if(view === 'dash') {
+    saveScenario();
+    actualizar();
+  }
+}
 
 let activeHiringMode = 'growth';
 function setHiringMode(mode) {
@@ -640,9 +760,9 @@ function setHiringMode(mode) {
 function downloadCSV() {
   const p = getParams();
   const rows = runModel(p, 1, 0, globalMeses);
-  let csv = 'Mes,Nuevos,Cancelados,Activos,MRR,Costos_Fijos,Infra,Publicidad,Personal,Impuestos,Flujo,Balance_Acum\n';
+  let csv = 'Mes,Nuevos,Cancelados,Activos,MRR_Bruto,Comision_Pasarela,MRR_Real,Perdida_Cambiaria,Costos_Fijos,Infra,Publicidad,Personal,Impuestos,Flujo_Caja,Balance_Acum\n';
   rows.forEach(r => {
-    csv += `${r.mes},${r.nuevos},${r.cancelados},${r.activos},${r.mrr},${r.costs.conta},${r.costs.infra},${r.costs.pub},${r.costs.personal},${r.tax.toFixed(2)},${r.flujo.toFixed(2)},${r.acum.toFixed(2)}\n`;
+    csv += `${r.mes},${r.nuevos},${r.cancelados},${r.activos},${r.mrr},${r.pasarela.toFixed(2)},${r.mrrReal.toFixed(2)},${r.gapLoss.toFixed(2)},${r.costs.conta},${r.costs.infra},${r.costs.pub},${r.costs.personal},${r.tax.toFixed(2)},${r.flujo.toFixed(2)},${r.acum.toFixed(2)}\n`;
   });
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = window.URL.createObjectURL(blob);
@@ -681,17 +801,17 @@ const SCENARIOS = {
   // - High baseline churn in pessimistic due to economic instability
   // - Lower ad spend (CPC is cheaper, but conversion is harder)
   // - Realistic growth is slower initially
-  pesi: { precio:30, c1:2,  crec:0, churn:12, inv:10200, conta:250, pub:150,  infra:80,  s1:250, u1:30, s2:250, u2:70, s3:500, u3:150 },
-  real: { precio:30, c1:4,  crec:1, churn:6,  inv:10200, conta:300, pub:300,  infra:100, s1:250, u1:25, s2:300, u2:60, s3:600, u3:120 },
-  opti: { precio:30, c1:7,  crec:2, churn:3,  inv:10200, conta:300, pub:500,  infra:100, s1:300, u1:20, s2:300, u2:50, s3:800, u3:100 },
+  pesi: { precio:30, c1:2,  crec:0, churn:12, inv:10200, conta:250, pub:150,  infra:80,  gap:35, s1:250, u1:30, s2:250, u2:70, s3:500, u3:150 },
+  real: { precio:30, c1:4,  crec:1, churn:6,  inv:10200, conta:300, pub:300,  infra:100, gap:25, s1:250, u1:25, s2:300, u2:60, s3:600, u3:120 },
+  opti: { precio:30, c1:7,  crec:2, churn:3,  inv:10200, conta:300, pub:500,  infra:100, gap:15, s1:300, u1:20, s2:300, u2:50, s3:800, u3:100 },
 };
 
-function setScenario(key) {
+function setScenario(key, skipUpdate=false) {
   activeScenario = key;
   const s = SCENARIOS[key];
   Object.entries(s).forEach(([k, v]) => { const el = $(k); if (el) el.value = v; });
   document.querySelectorAll('.scen-btn').forEach(b => b.classList.toggle('active', b.dataset.scen === key));
-  actualizar();
+  if (!skipUpdate) actualizar();
 }
 
 // ── Period ──
@@ -789,23 +909,32 @@ function computeCosts(mes, activos, mrr, p) {
 
 function runModel(p, gF=1, chAdj=0, meses=12) {
   const churn = Math.max(0, p.churn + chAdj) / 100;
+  const gapDiff = Math.max(0, p.gap) / 100;
+  const pasarela = 0.05; // Fija 5%
   const rows  = [];
   let activos = 0, acum = -p.inversion;
-  rows.push({ mes:0, nuevos:0, cancelados:0, activos:0, mrr:0, costs:{conta:0,infra:0,pub:0,personal:0,total:0,who:[]}, flujo:-p.inversion, acum, tax:0 });
+  rows.push({ mes:0, nuevos:0, cancelados:0, activos:0, mrr:0, mrrReal:0, costs:{conta:0,infra:0,pub:0,personal:0,total:0,who:[]}, flujo:-p.inversion, acum, tax:0, pasarela:0, gapLoss:0 });
   
   for (let mes = 1; mes <= meses; mes++) {
     const nuevos     = Math.max(1, Math.round((p.c1 + (mes-1)*p.crec) * gF));
     const cancelados = Math.round(activos * churn);
     activos = Math.max(0, activos - cancelados + nuevos);
-    const mrr   = activos * p.precio;
-    const costs = computeCosts(mes, activos, mrr, p);
+    const mrrNominal = activos * p.precio;
     
-    const profitBeforeTax = mrr - costs.total;
+    // Deducciones de pasarela y pérdida por diferencial cambiario
+    const costPasarela = mrrNominal * pasarela;
+    const mrrNeto = mrrNominal - costPasarela;
+    const mrrReal = mrrNeto * (1 - gapDiff);
+    const gapLoss = mrrNeto - mrrReal;
+    
+    const costs = computeCosts(mes, activos, mrrReal, p);
+    
+    const profitBeforeTax = mrrReal - costs.total;
     const tax = profitBeforeTax > 0 ? profitBeforeTax * (p.tax / 100) : 0;
     const flujo = profitBeforeTax - tax;
     
     acum += flujo;
-    rows.push({ mes, nuevos, cancelados, activos, mrr, costs, flujo, acum, tax });
+    rows.push({ mes, nuevos, cancelados, activos, mrr:mrrNominal, mrrReal, costs, flujo, acum, tax, pasarela:costPasarela, gapLoss });
   }
   return rows;
 }
@@ -816,6 +945,7 @@ function getParams() {
     inversion: v('inv'), precio: v('precio'),
     c1: v('c1'),         crec: v('crec'), churn: v('churn'),
     tax: 16,             conta: v('conta'),   pub: v('pub'),   infra: v('infra'),
+    gap: v('gap'),
     sal1: v('s1'), umbral1: v('u1'),
     sal2: v('s2'), umbral2: v('u2'),
     sal3: v('s3'), umbral3: v('u3'),
@@ -854,7 +984,8 @@ function actualizar() {
   $('v-crec').textContent   = p.crec === 0 ? 'Sin crecimiento' : `+${p.crec} / mes`;
   $('v-churn').textContent  = p.churn + '%';
   $('v-infra').textContent  = fmt(p.infra);
-  $('v-tax').textContent    = p.tax + '%';
+  if($('v-gap'))   $('v-gap').textContent   = p.gap + '%';
+  if($('v-tax'))   $('v-tax').textContent   = p.tax + '%';
   if($('v-inv'))   $('v-inv').textContent   = fmt(p.inversion);
   if($('v-pub'))   $('v-pub').textContent   = fmt(p.pub);
   if($('v-conta')) $('v-conta').textContent = fmt(p.conta);
@@ -904,6 +1035,24 @@ function actualizar() {
   const rule40 = growthRate + ebitdaMargin;
   $('k-rule40').textContent = isFinite(rule40) ? rule40.toFixed(0) + '%' : '—';
   $('k-rule40').className = 'kpi-val ' + (rule40 >= 40 ? 'p' : rule40 >= 20 ? 'w' : (rule40 < 0 ? 'n' : ''));
+
+  // Runway
+  const cashInBank = p.inversion + last.acum;
+  let runway = '∞';
+  let runwayCls = 'p';
+  if (last.flujo < 0) {
+    const monthsLeft = cashInBank / Math.abs(last.flujo);
+    runway = (monthsLeft).toFixed(1) + 'm';
+    runwayCls = monthsLeft > 12 ? 'p' : (monthsLeft > 6 ? 'w' : 'n');
+  } else {
+    runway = 'Rentable';
+  }
+  const kr = $('k-runway');
+  if (kr) {
+    kr.textContent = runway;
+    kr.className = 'kpi-val ' + runwayCls;
+    kr.parentElement.style.borderColor = runwayCls === 'n' ? 'var(--neg)' : (runwayCls==='w'?'var(--warn)':'var(--pos)');
+  }
 
   $('k-ltv').textContent = ltv ? fmt(ltv) : '—';
   $('k-cac').textContent = cac ? fmt(cac) : '—';
@@ -1054,8 +1203,20 @@ function renderTable(rows, p) {
 document.addEventListener('DOMContentLoaded', ()=>{
   $('fecha').textContent = new Date().toLocaleDateString('es-VE',{day:'2-digit',month:'long',year:'numeric'});
   initCharts();
-  setScenario('real');
-  ['precio','c1','crec','churn','inv','conta','pub','infra','s1','u1','s2','u2','s3','u3'].forEach(id=>{
+  
+  const loaded = loadScenario();
+  if (!loaded) {
+    setScenario('real');
+  } else {
+    // If loaded from URL, default to dashboard view for investors
+    if (window.location.hash.length > 1) {
+      switchView('dash');
+    } else {
+      actualizar(); // Update with loaded localStorage values config mode
+    }
+  }
+
+  ['precio','c1','crec','churn','inv','conta','pub','infra','gap','s1','u1','s2','u2','s3','u3'].forEach(id=>{
     const el = $(id);
     if(el) el.addEventListener('input',actualizar);
   });
