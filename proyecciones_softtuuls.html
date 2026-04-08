@@ -39,6 +39,12 @@
 
     /* ── Top bar: period + scenario ── */
     .top-bar { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; flex-wrap:wrap; }
+    .export-btn {
+      padding:6px 14px; border-radius:8px; border:1px solid var(--accent);
+      background:rgba(79,142,247,.08); color:var(--accent); font-size:.7rem; font-weight:600;
+      cursor:pointer; display:flex; align-items:center; gap:6px; transition:all .2s;
+    }
+    .export-btn:hover { background:var(--accent); color:#fff; }
     .bar-group { display:flex; align-items:center; gap:8px; }
     .bar-label { font-size:.62rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--tm); white-space:nowrap; }
 
@@ -250,31 +256,37 @@
 
   <!-- ── Top bar: period + scenario ── -->
   <div class="top-bar">
-    <div class="bar-group">
-      <span class="bar-label">Horizonte</span>
-      <div class="period-btns">
-        <button class="period-btn active" data-meses="12" onclick="setPeriod(12)">1 Año</button>
-        <button class="period-btn"        data-meses="24" onclick="setPeriod(24)">2 Años</button>
-        <button class="period-btn"        data-meses="36" onclick="setPeriod(36)">3 Años</button>
+    <div class="bar-controls" style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+      <div class="bar-group">
+        <span class="bar-label">Horizonte</span>
+        <div class="period-btns">
+          <button class="period-btn active" data-meses="12" onclick="setPeriod(12)">1 Año</button>
+          <button class="period-btn"        data-meses="24" onclick="setPeriod(24)">2 Años</button>
+          <button class="period-btn"        data-meses="36" onclick="setPeriod(36)">3 Años</button>
+        </div>
+      </div>
+      <div class="bar-group">
+        <span class="bar-label">Escenario base</span>
+        <div class="scen-btns">
+          <button class="scen-btn pesi" data-scen="pesi" onclick="setScenario('pesi')">
+            <span class="sn">Pesimista</span>
+            <span class="sd">Churn 10% · 3 clientes/mes<br>Sin crecimiento de ventas</span>
+          </button>
+          <button class="scen-btn real active" data-scen="real" onclick="setScenario('real')">
+            <span class="sn">Realista</span>
+            <span class="sd">Churn 4% · 5 clientes/mes<br>+1 cliente adicional/mes</span>
+          </button>
+          <button class="scen-btn opti" data-scen="opti" onclick="setScenario('opti')">
+            <span class="sn">Optimista</span>
+            <span class="sd">Churn 2% · 8 clientes/mes<br>+2 clientes adicionales/mes</span>
+          </button>
+        </div>
       </div>
     </div>
-    <div class="bar-group">
-      <span class="bar-label">Escenario base</span>
-      <div class="scen-btns">
-        <button class="scen-btn pesi" data-scen="pesi" onclick="setScenario('pesi')">
-          <span class="sn">Pesimista</span>
-          <span class="sd">Churn 10% · 3 clientes/mes<br>Sin crecimiento de ventas</span>
-        </button>
-        <button class="scen-btn real active" data-scen="real" onclick="setScenario('real')">
-          <span class="sn">Realista</span>
-          <span class="sd">Churn 4% · 5 clientes/mes<br>+1 cliente adicional/mes</span>
-        </button>
-        <button class="scen-btn opti" data-scen="opti" onclick="setScenario('opti')">
-          <span class="sn">Optimista</span>
-          <span class="sd">Churn 2% · 8 clientes/mes<br>+2 clientes adicionales/mes</span>
-        </button>
-      </div>
-    </div>
+    <button class="export-btn" onclick="downloadCSV()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Exportar CSV
+    </button>
   </div>
 
   <!-- ── Controls ── -->
@@ -626,6 +638,24 @@ function setHiringMode(mode) {
   actualizar();
 }
 
+function downloadCSV() {
+  const p = getParams();
+  const rows = runModel(p, 1, 0, globalMeses);
+  let csv = 'Mes,Nuevos,Cancelados,Activos,MRR,Costos_Fijos,Infra,Publicidad,Personal,Impuestos,Flujo,Balance_Acum\n';
+  rows.forEach(r => {
+    csv += `${r.mes},${r.nuevos},${r.cancelados},${r.activos},${r.mrr},${r.costs.conta},${r.costs.infra},${r.costs.pub},${r.costs.personal},${r.tax.toFixed(2)},${r.flujo.toFixed(2)},${r.acum.toFixed(2)}\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.setAttribute('hidden', '');
+  a.setAttribute('href', url);
+  a.setAttribute('download', `proyeccion_softtuuls_${globalMeses}m.csv`);
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
 function openPopup(term) {
   const g = GLOSSARY[term];
   if (!g) return;
@@ -829,7 +859,7 @@ function actualizar() {
   $('v-s2').textContent = fmt(p.sal2); $('v-u2').textContent = p.umbral2;
   $('v-s3').textContent = fmt(p.sal3); $('v-u3').textContent = p.umbral3;
 
-  ['k-mes-lbl','k-mes-lbl2','k-mes-lbl3'].forEach(id => $(id).textContent = m);
+  ['k-mes-lbl','k-mes-lbl2'].forEach(id => { const el = $(id); if(el) el.textContent = m; });
 
   // 3 scenarios with calibrated deltas
   const base  = runModel(p, 1,    0,  m);
