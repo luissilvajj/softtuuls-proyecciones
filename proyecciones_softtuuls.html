@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Proyecciones Financieras — Softtuuls</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#0b0d13; --s1:#12151f; --s2:#181c28; --s3:#1e2332;
+      --bdr:rgba(255,255,255,0.06); --bl:rgba(255,255,255,0.10);
+      --accent:#4f8ef7; --pos:#34d399; --neg:#f87171; --warn:#fbbf24; --purple:#c084fc; --orange:#fb923c;
+      --tp:#e2e8f0; --tm:#4b5675; --ts:#7c8faa;
+      --r12:12px; --r16:16px;
+    }
+    html { scroll-behavior:smooth; }
+    body { font-family:'Inter',-apple-system,sans-serif; background:var(--bg); color:var(--tp); min-height:100vh; font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+
+    /* ── Header ── */
+    header { background:var(--s1); border-bottom:1px solid var(--bdr); padding:0 44px; height:56px; display:flex; align-items:center; }
+    .brand { display:flex; align-items:center; gap:10px; }
+    .brand-mark { width:26px; height:26px; background:var(--accent); border-radius:6px; opacity:.9; }
+    .brand-name { font-size:.9rem; font-weight:600; }
+    .brand-name span { color:var(--tm); font-weight:400; font-size:.8rem; margin-left:4px; }
+
+    /* ── Layout ── */
+    main { max-width:1420px; margin:0 auto; padding:26px 28px 80px; }
+
+    /* ── Top bar: period + scenario ── */
+    .top-bar { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; flex-wrap:wrap; }
+    .bar-group { display:flex; align-items:center; gap:8px; }
+    .bar-label { font-size:.62rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--tm); white-space:nowrap; }
+
+    .period-btns { display:flex; gap:3px; background:var(--s1); border:1px solid var(--bdr); border-radius:9px; padding:3px; }
+    .period-btn  { padding:6px 18px; border-radius:7px; border:none; cursor:pointer; font-family:'Inter',sans-serif; font-size:.76rem; font-weight:600; color:var(--tm); background:transparent; transition:background .18s,color .18s; }
+    .period-btn.active { background:var(--accent); color:#fff; }
+    .period-btn:not(.active):hover { background:var(--s3); color:var(--tp); }
+
+    /* ── Scenario Buttons ── */
+    .scen-btns { display:flex; gap:8px; }
+    .scen-btn {
+      display:flex; flex-direction:column; align-items:flex-start;
+      padding:8px 16px; border-radius:10px; border:1px solid var(--bdr);
+      cursor:pointer; font-family:'Inter',sans-serif; background:var(--s1);
+      transition:border-color .18s, background .18s; min-width:126px;
+    }
+    .scen-btn:hover { border-color:var(--bl); background:var(--s2); }
+    .scen-btn.active { border-color:currentColor; background:var(--s2); }
+    .scen-btn.pesi { color:var(--neg); }
+    .scen-btn.real { color:var(--accent); }
+    .scen-btn.opti { color:var(--pos); }
+    .scen-btn .sn  { font-size:.76rem; font-weight:700; }
+    .scen-btn .sd  { font-size:.6rem; color:var(--tm); margin-top:2px; font-weight:400; line-height:1.3; }
+    .scen-btn.active .sd { color:var(--ts); }
+
+    /* ── Controls ── */
+    .controls-wrap { display:grid; grid-template-columns:1fr 1fr 1fr; gap:2px; margin-bottom:18px; background:var(--bdr); border-radius:var(--r16); overflow:hidden; }
+    @media(max-width:960px){ .controls-wrap{grid-template-columns:1fr;} }
+    .ctrl-sec { background:var(--s1); padding:20px 22px 24px; }
+    .ctrl-sec:first-child{border-radius:var(--r16) 0 0 var(--r16);}
+    .ctrl-sec:last-child {border-radius:0 var(--r16) var(--r16) 0;}
+    @media(max-width:960px){.ctrl-sec:first-child{border-radius:var(--r16) var(--r16) 0 0;}.ctrl-sec:last-child{border-radius:0 0 var(--r16) var(--r16);}}
+    .ctrl-ttl { font-size:.58rem; font-weight:700; text-transform:uppercase; letter-spacing:1.3px; color:var(--accent); margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--bdr); }
+    .ctrl-grid { display:flex; flex-direction:column; gap:13px; }
+    .ctrl-lbl  { font-size:.64rem; font-weight:500; color:var(--tm); text-transform:uppercase; letter-spacing:.5px; margin-bottom:3px; display:block; }
+    .ctrl-val  { font-size:1.2rem; font-weight:700; color:var(--tp); letter-spacing:-.5px; margin-bottom:5px; font-variant-numeric:tabular-nums; }
+    .ctrl-hint { font-size:.6rem; color:var(--tm); margin-top:2px; }
+    input[type=range] { -webkit-appearance:none; width:100%; height:2px; background:var(--s3); border-radius:2px; outline:none; cursor:pointer; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:12px; height:12px; border-radius:50%; background:var(--accent); transition:transform .15s,box-shadow .15s; }
+    input[type=range]::-webkit-slider-thumb:hover { transform:scale(1.35); box-shadow:0 0 0 4px rgba(79,142,247,.15); }
+
+    /* ── Advisory ── */
+    .advisory { border-radius:var(--r12); padding:12px 18px; margin-bottom:18px; display:flex; align-items:flex-start; gap:13px; border:1px solid; }
+    .advisory.good{background:rgba(52,211,153,.05);border-color:rgba(52,211,153,.2);}
+    .advisory.warn{background:rgba(251,191,36,.05);border-color:rgba(251,191,36,.2);}
+    .advisory.bad {background:rgba(248,113,113,.05);border-color:rgba(248,113,113,.2);}
+    .adv-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; margin-top:6px; }
+    .advisory.good .adv-dot{background:var(--pos);} .advisory.warn .adv-dot{background:var(--warn);} .advisory.bad .adv-dot{background:var(--neg);}
+    .adv-title { font-size:.74rem; font-weight:600; margin-bottom:2px; }
+    .advisory.good .adv-title{color:var(--pos);} .advisory.warn .adv-title{color:var(--warn);} .advisory.bad .adv-title{color:var(--neg);}
+    .adv-text { font-size:.69rem; color:var(--ts); line-height:1.6; }
+
+    /* ── Annual Summary ── */
+    .year-summary { display:none; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:18px; }
+    .year-summary.vis { display:grid; }
+    .year-card { background:var(--s1); border:1px solid var(--bdr); border-radius:var(--r16); padding:18px 20px; position:relative; overflow:hidden; }
+    .year-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+    .year-card.y1::before{background:var(--accent);} .year-card.y2::before{background:var(--pos);} .year-card.y3::before{background:var(--purple);}
+    .yr-tag  { font-size:.6rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; }
+    .year-card.y1 .yr-tag{color:var(--accent);} .year-card.y2 .yr-tag{color:var(--pos);} .year-card.y3 .yr-tag{color:var(--purple);}
+    .yr-stats { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .yr-sl { font-size:.61rem; color:var(--tm); text-transform:uppercase; letter-spacing:.5px; margin-bottom:2px; }
+    .yr-sv { font-size:1.05rem; font-weight:700; letter-spacing:-.4px; font-variant-numeric:tabular-nums; }
+
+    /* ── KPI Grid ── */
+    .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:11px; margin-bottom:18px; }
+    @media(max-width:900px){ .kpi-grid{grid-template-columns:repeat(2,1fr);} }
+    .kpi-card { background:var(--s1); border:1px solid var(--bdr); border-radius:var(--r12); padding:16px 18px; position:relative; overflow:hidden; transition:border-color .2s,transform .2s; }
+    .kpi-card:hover { border-color:var(--bl); transform:translateY(-2px); }
+    .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--accent); opacity:0; transition:opacity .2s; }
+    .kpi-card:hover::before { opacity:1; }
+    .kpi-lbl { font-size:.61rem; font-weight:600; color:var(--tm); text-transform:uppercase; letter-spacing:.8px; margin-bottom:6px; }
+    .kpi-val { font-size:1.38rem; font-weight:700; letter-spacing:-.7px; color:var(--tp); font-variant-numeric:tabular-nums; }
+    .kpi-val.a{color:var(--accent);} .kpi-val.p{color:var(--pos);} .kpi-val.n{color:var(--neg);} .kpi-val.w{color:var(--warn);}
+    .kpi-sub { font-size:.62rem; color:var(--tm); margin-top:3px; }
+
+    /* ── Glossary Term ── */
+    .term { border-bottom:1px dashed var(--tm); cursor:help; transition:border-color .15s,color .15s; display:inline; }
+    .term:hover { border-color:var(--accent); color:var(--accent); }
+
+    /* ── Glossary Popup ── */
+    .gloss-bd { position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:900; opacity:0; pointer-events:none; transition:opacity .2s; backdrop-filter:blur(3px); }
+    .gloss-bd.vis { opacity:1; pointer-events:all; }
+    .gloss-popup {
+      position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(.96);
+      background:var(--s2); border:1px solid var(--bl); border-radius:var(--r16);
+      padding:28px; max-width:500px; width:calc(100vw - 32px);
+      z-index:901; opacity:0; pointer-events:none;
+      transition:opacity .2s,transform .2s;
+      box-shadow:0 24px 60px rgba(0,0,0,.6);
+    }
+    .gloss-popup.vis { opacity:1; transform:translate(-50%,-50%) scale(1); pointer-events:all; }
+    .gp-title { font-size:.95rem; font-weight:700; color:var(--tp); margin-bottom:10px; }
+    .gp-def   { font-size:.78rem; color:var(--ts); line-height:1.7; margin-bottom:14px; }
+    .gp-block { background:var(--s3); border-radius:8px; padding:12px 14px; margin-bottom:10px; }
+    .gp-block-lbl { font-size:.58rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--tm); margin-bottom:5px; }
+    .gp-formula { font-family:'JetBrains Mono',monospace; font-size:.76rem; color:var(--accent); line-height:1.6; }
+    .gp-example { font-size:.75rem; color:var(--tp); line-height:1.6; }
+    .gp-bench-box { background:rgba(79,142,247,.07); border:1px solid rgba(79,142,247,.15); border-radius:8px; padding:10px 14px; }
+    .gp-bench-lbl { font-size:.58rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--accent); margin-bottom:4px; }
+    .gp-bench { font-size:.73rem; color:var(--ts); line-height:1.6; }
+    .gp-close { margin-top:18px; width:100%; padding:9px; background:var(--s3); border:1px solid var(--bdr); border-radius:8px; color:var(--ts); font-family:'Inter',sans-serif; font-size:.76rem; font-weight:600; cursor:pointer; transition:background .15s,color .15s; }
+    .gp-close:hover { background:var(--bl); color:var(--tp); }
+
+    /* ── Charts ── */
+    .charts-row { display:grid; grid-template-columns:1.7fr 1fr; gap:13px; margin-bottom:18px; }
+    @media(max-width:900px){ .charts-row{grid-template-columns:1fr;} }
+    .chart-card { background:var(--s1); border:1px solid var(--bdr); border-radius:var(--r16); padding:20px 22px; }
+    .chart-title { font-size:.8rem; font-weight:600; margin-bottom:3px; }
+    .chart-sub   { font-size:.66rem; color:var(--tm); margin-bottom:16px; }
+    .chart-wrap  { position:relative; height:262px; }
+
+    /* ── Timeline ── */
+    .timeline-card { background:var(--s1); border:1px solid var(--bdr); border-radius:var(--r16); padding:20px 28px 38px; margin-bottom:18px; }
+    .tl-wrap  { position:relative; margin-top:20px; height:200px; }
+    .tl-bar   { position:absolute; left:0; right:0; top:96px; height:3px; background:var(--s3); border-radius:3px; }
+    .tl-months{ position:absolute; left:0; right:0; top:102px; pointer-events:none; }
+    .tl-m     { position:absolute; font-size:.54rem; color:var(--tm); transform:translateX(-50%); }
+    .tl-m.el  { transform:translateX(0); }
+    .tl-m.er  { transform:translateX(-100%); }
+    .tl-events{ position:absolute; left:0; right:0; top:0; bottom:0; }
+    .tl-event.above { position:absolute; top:0; height:96px; display:flex; flex-direction:column-reverse; align-items:center; }
+    .tl-event.below { position:absolute; top:96px; height:104px; display:flex; flex-direction:column; align-items:center; }
+    .tl-line  { width:1px; flex:1; min-height:12px; }
+    .tl-dot   { width:12px; height:12px; border-radius:50%; border:2px solid var(--bg); flex-shrink:0; }
+    .tl-lbl   { font-size:.58rem; font-weight:600; white-space:nowrap; text-align:center; line-height:1.45; flex-shrink:0; }
+    .tl-event.above .tl-lbl { margin-bottom:3px; }
+    .tl-event.below .tl-lbl { margin-top:3px; }
+
+    /* ── Table ── */
+    .table-card { background:var(--s1); border:1px solid var(--bdr); border-radius:var(--r16); overflow:hidden; }
+    .table-hd   { padding:15px 22px; border-bottom:1px solid var(--bdr); }
+    .table-title{ font-size:.8rem; font-weight:600; }
+    .table-sub  { font-size:.66rem; color:var(--tm); margin-top:2px; }
+    .tbl-scroll { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-size:.75rem; }
+    thead th { background:var(--s2); color:var(--tm); font-size:.58rem; font-weight:600; text-transform:uppercase; letter-spacing:.7px; padding:9px 12px; text-align:right; white-space:nowrap; }
+    thead th:first-child { text-align:center; min-width:48px; }
+    tbody tr { border-bottom:1px solid var(--bdr); transition:background .1s; }
+    tbody tr:last-child { border-bottom:none; }
+    tbody tr:hover { background:rgba(255,255,255,.015); }
+    tbody tr.r-inv  { background:rgba(248,113,113,.04); }
+    tbody tr.r-be   { background:rgba(52,211,153,.05); }
+    tbody tr.r-hire { background:rgba(79,142,247,.05); }
+    tbody td { padding:8px 12px; text-align:right; font-variant-numeric:tabular-nums; color:var(--tp); }
+    tbody td:first-child { text-align:center; font-weight:600; font-size:.68rem; color:var(--tm); }
+    .tag { display:inline-block; padding:2px 7px; border-radius:4px; font-size:.65rem; font-weight:600; font-variant-numeric:tabular-nums; }
+    .tag.p{background:rgba(52,211,153,.1);color:var(--pos);}
+    .tag.n{background:rgba(248,113,113,.1);color:var(--neg);}
+    td.p{color:var(--pos);} td.n{color:var(--neg);}
+    .hire-lbl { font-size:.57rem; color:var(--accent); font-weight:600; display:block; margin-top:1px; }
+    .yr-sep td { background:var(--s2)!important; color:var(--tm)!important; font-size:.6rem!important; font-weight:700!important; text-transform:uppercase; letter-spacing:.8px; text-align:center!important; padding:5px!important; }
+
+    /* ── Sec label ── */
+    .sec-lbl { font-size:.58rem; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; color:var(--tm); margin-bottom:10px; }
+
+    /* ── Footer ── */
+    footer { margin-top:60px; padding:18px 0; border-top:1px solid var(--bdr); text-align:center; font-size:.66rem; color:var(--tm); }
+
+    /* ── Animations ── */
+    @keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .top-bar,.controls-wrap,.advisory,.year-summary,.kpi-grid,.charts-row,.timeline-card,.table-card { animation:fu .35s ease both; }
+  </style>
+</head>
+<body>
+
+<!-- ── Glossary backdrop + popup ── -->
+<div class="gloss-bd" id="gloss-bd" onclick="closePopup()"></div>
+<div class="gloss-popup" id="gloss-popup">
+  <div class="gp-title"    id="gp-title"></div>
+  <div class="gp-def"      id="gp-def"></div>
+  <div class="gp-block">
+    <div class="gp-block-lbl">Fórmula</div>
+    <div class="gp-formula"  id="gp-formula"></div>
+  </div>
+  <div class="gp-block">
+    <div class="gp-block-lbl">Ejemplo práctico</div>
+    <div class="gp-example"  id="gp-example"></div>
+  </div>
+  <div class="gp-bench-box">
+    <div class="gp-bench-lbl">Referencia de industria SaaS</div>
+    <div class="gp-bench"    id="gp-bench"></div>
+  </div>
+  <button class="gp-close" onclick="closePopup()">Cerrar</button>
+</div>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark"></div>
+    <div class="brand-name">Softtuuls <span>/ Modelo Financiero</span></div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ── Top bar: period + scenario ── -->
+  <div class="top-bar">
+    <div class="bar-group">
+      <span class="bar-label">Horizonte</span>
+      <div class="period-btns">
+        <button class="period-btn active" data-meses="12" onclick="setPeriod(12)">1 Año</button>
+        <button class="period-btn"        data-meses="24" onclick="setPeriod(24)">2 Años</button>
+        <button class="period-btn"        data-meses="36" onclick="setPeriod(36)">3 Años</button>
+      </div>
+    </div>
+    <div class="bar-group">
+      <span class="bar-label">Escenario base</span>
+      <div class="scen-btns">
+        <button class="scen-btn pesi" data-scen="pesi" onclick="setScenario('pesi')">
+          <span class="sn">Pesimista</span>
+          <span class="sd">Churn 10% · 3 clientes/mes<br>Sin crecimiento de ventas</span>
+        </button>
+        <button class="scen-btn real active" data-scen="real" onclick="setScenario('real')">
+          <span class="sn">Realista</span>
+          <span class="sd">Churn 4% · 5 clientes/mes<br>+1 cliente adicional/mes</span>
+        </button>
+        <button class="scen-btn opti" data-scen="opti" onclick="setScenario('opti')">
+          <span class="sn">Optimista</span>
+          <span class="sd">Churn 2% · 8 clientes/mes<br>+2 clientes adicionales/mes</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Controls ── -->
+  <div class="controls-wrap">
+
+    <div class="ctrl-sec">
+      <div class="ctrl-ttl">Adquisición y retención</div>
+      <div class="ctrl-grid">
+        <div>
+          <span class="ctrl-lbl">Precio mensual por cliente</span>
+          <div class="ctrl-val" id="v-precio">$30</div>
+          <input type="range" id="precio" min="10" max="300" step="5" value="30" />
+          <div class="ctrl-hint">Cuánto paga cada cliente activo por mes (MRR unitario)</div>
+        </div>
+        <div>
+          <span class="ctrl-lbl">Clientes nuevos — mes 1</span>
+          <div class="ctrl-val" id="v-c1">5</div>
+          <input type="range" id="c1" min="1" max="30" step="1" value="5" />
+        </div>
+        <div>
+          <span class="ctrl-lbl">Crecimiento mensual de ventas</span>
+          <div class="ctrl-val" id="v-crec">+1 / mes</div>
+          <input type="range" id="crec" min="0" max="10" step="1" value="1" />
+          <div class="ctrl-hint">Clientes adicionales que se suman al ritmo de ventas cada mes</div>
+        </div>
+        <div>
+          <span class="ctrl-lbl"><span class="term" data-term="churn">Churn</span> — tasa de cancelación mensual</span>
+          <div class="ctrl-val" id="v-churn">4%</div>
+          <input type="range" id="churn" min="0" max="20" step="1" value="4" />
+          <div class="ctrl-hint">Pesimista: 8–12% · Realista: 3–5% · Optimista: 1–2%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ctrl-sec">
+      <div class="ctrl-ttl">Costos fijos y operativos</div>
+      <div class="ctrl-grid">
+        <div>
+          <span class="ctrl-lbl">Inversión inicial (legal + tech)</span>
+          <div class="ctrl-val" id="v-inv">$10,200</div>
+          <input type="range" id="inv" min="5000" max="50000" step="200" value="10200" />
+          <div class="ctrl-hint">Seniat, homologación, desarrollo, licencias iniciales</div>
+        </div>
+        <div>
+          <span class="ctrl-lbl">Servicios contables mensuales</span>
+          <div class="ctrl-val" id="v-conta">$300</div>
+          <input type="range" id="conta" min="0" max="800" step="50" value="300" />
+          <div class="ctrl-hint">Declaraciones, IGTF, nómina, auditoría</div>
+        </div>
+        <div>
+          <span class="ctrl-lbl">Publicidad digital mensual</span>
+          <div class="ctrl-val" id="v-pub">$500</div>
+          <input type="range" id="pub" min="0" max="3000" step="50" value="500" />
+          <div class="ctrl-hint">Google Ads, Meta, LinkedIn, YouTube, TikTok</div>
+        </div>
+        <div>
+          <span class="ctrl-lbl">Infraestructura cloud base</span>
+          <div class="ctrl-val" id="v-infra">$100</div>
+          <input type="range" id="infra" min="20" max="600" step="10" value="100" />
+          <div class="ctrl-hint">Escala automáticamente +$18 por cada 25 clientes</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ctrl-sec">
+      <div class="ctrl-ttl">Plan de contratación automático</div>
+      <div class="ctrl-grid">
+        <div>
+          <span class="ctrl-lbl">Operador técnico 1 — salario</span>
+          <div class="ctrl-val" id="v-s1">$300</div>
+          <input type="range" id="s1" min="100" max="1200" step="50" value="300" />
+        </div>
+        <div>
+          <span class="ctrl-lbl">Contratar Op. 1 al alcanzar</span>
+          <div class="ctrl-val" id="v-u1">25 clientes</div>
+          <input type="range" id="u1" min="5" max="120" step="5" value="25" />
+        </div>
+        <div>
+          <span class="ctrl-lbl">Operador técnico 2 — salario</span>
+          <div class="ctrl-val" id="v-s2">$300</div>
+          <input type="range" id="s2" min="100" max="1200" step="50" value="300" />
+        </div>
+        <div>
+          <span class="ctrl-lbl">Contratar Op. 2 al alcanzar</span>
+          <div class="ctrl-val" id="v-u2">60 clientes</div>
+          <input type="range" id="u2" min="10" max="200" step="5" value="60" />
+        </div>
+        <div>
+          <span class="ctrl-lbl">Desarrollador / Soporte — salario</span>
+          <div class="ctrl-val" id="v-s3">$500</div>
+          <input type="range" id="s3" min="100" max="2000" step="50" value="500" />
+        </div>
+        <div>
+          <span class="ctrl-lbl">Contratar Dev al alcanzar</span>
+          <div class="ctrl-val" id="v-u3">120 clientes</div>
+          <input type="range" id="u3" min="30" max="400" step="10" value="120" />
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Advisory ── -->
+  <div class="advisory good" id="advisory">
+    <div class="adv-dot"></div>
+    <div>
+      <div class="adv-title" id="adv-title">—</div>
+      <div class="adv-text"  id="adv-text">—</div>
+    </div>
+  </div>
+
+  <!-- ── Annual Summary (2-3 years) ── -->
+  <div class="year-summary" id="year-summary">
+    <div class="year-card y1">
+      <div class="yr-tag">Año 1 — Meses 1–12</div>
+      <div class="yr-stats" id="yr1-stats"></div>
+    </div>
+    <div class="year-card y2">
+      <div class="yr-tag">Año 2 — Meses 13–24</div>
+      <div class="yr-stats" id="yr2-stats"></div>
+    </div>
+    <div class="year-card y3" id="yr3-card" style="display:none">
+      <div class="yr-tag">Año 3 — Meses 25–36</div>
+      <div class="yr-stats" id="yr3-stats"></div>
+    </div>
+  </div>
+
+  <!-- ── KPI Grid ── -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-lbl">Clientes activos mes <span id="k-mes-lbl">12</span></div>
+      <div class="kpi-val a" id="k-c12">—</div>
+      <div class="kpi-sub">escenario realista, con <span class="term" data-term="churn">churn</span> aplicado</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-lbl"><span class="term" data-term="mrr">MRR</span> mes <span id="k-mes-lbl2">12</span></div>
+      <div class="kpi-val p" id="k-mrr">—</div>
+      <div class="kpi-sub">ingreso mensual recurrente final</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-lbl"><span class="term" data-term="arr">ARR</span> proyectado</div>
+      <div class="kpi-val" id="k-arr">—</div>
+      <div class="kpi-sub">MRR final × 12</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-lbl"><span class="term" data-term="ltv">LTV</span> por cliente</div>
+      <div class="kpi-val" id="k-ltv">—</div>
+      <div class="kpi-sub">precio ÷ churn%</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-lbl"><span class="term" data-term="cac">CAC</span> estimado</div>
+      <div class="kpi-val" id="k-cac">—</div>
+      <div class="kpi-sub">publicidad ÷ clientes nuevos promedio</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-lbl">Ratio <span class="term" data-term="ratio">LTV/CAC</span></div>
+      <div class="kpi-val" id="k-ratio">—</div>
+      <div class="kpi-sub">meta: mayor a 3× para escalar</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-lbl"><span class="term" data-term="breakeven">Break-even</span></div>
+      <div class="kpi-val a" id="k-be">—</div>
+      <div class="kpi-sub">primer mes con balance positivo</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-lbl"><span class="term" data-term="acum">Balance acumulado</span> mes <span id="k-mes-lbl3">12</span></div>
+      <div class="kpi-val" id="k-bal">—</div>
+      <div class="kpi-sub">ganancia neta al cierre del período</div>
+    </div>
+  </div>
+
+  <!-- ── Charts ── -->
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-title"><span class="term" data-term="acum">Balance acumulado</span> — 3 escenarios estadísticos</div>
+      <div class="chart-sub">Pesimista (×0.6 crecimiento, +6pp <span class="term" data-term="churn">churn</span>) &nbsp;·&nbsp; Realista &nbsp;·&nbsp; Optimista (×1.4 crecimiento, −2pp churn)</div>
+      <div class="chart-wrap"><canvas id="ch-be"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Estructura de costos por período</div>
+      <div class="chart-sub">El personal se activa automáticamente al cruzar cada umbral de clientes</div>
+      <div class="chart-wrap"><canvas id="ch-costs"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ── Timeline ── -->
+  <div class="timeline-card">
+    <div class="sec-lbl">Línea de tiempo — hitos de decisión automáticos</div>
+    <div class="tl-wrap">
+      <div class="tl-bar"></div>
+      <div class="tl-months" id="tl-months"></div>
+      <div class="tl-events" id="tl-events"></div>
+    </div>
+  </div>
+
+  <!-- ── Table ── -->
+  <div class="table-card">
+    <div class="table-hd">
+      <div class="table-title">Proyección detallada — mes a mes</div>
+      <div class="table-sub">Fila azul = contratación activada &nbsp;·&nbsp; Fila verde = <span class="term" data-term="breakeven">break-even</span> &nbsp;·&nbsp; Separadores = inicio de año</div>
+    </div>
+    <div class="tbl-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Mes</th>
+            <th>Nuevos</th>
+            <th>Cancelados</th>
+            <th>Activos</th>
+            <th><span class="term" data-term="mrr">MRR</span></th>
+            <th><span class="term" data-term="arr">ARR</span> anualiz.</th>
+            <th>Contabilidad</th>
+            <th>Infra.</th>
+            <th>Publicidad</th>
+            <th>Personal</th>
+            <th>Costo total</th>
+            <th><span class="term" data-term="flujo">Flujo del mes</span></th>
+            <th><span class="term" data-term="acum">Balance acum.</span></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  Softtuuls &mdash; Modelo financiero SaaS &mdash; Haz clic en cualquier término subrayado para ver su definición &mdash; <span id="fecha"></span>
+</footer>
+
+<script>
+// ── Utilities ──
+const $   = id => document.getElementById(id);
+const fmt  = v => '$' + Math.abs(Math.round(v)).toLocaleString('en-US');
+const fmtS = v => (v < 0 ? '-' : '') + fmt(v);
+const fmtN = v => Math.round(v).toLocaleString('en-US');
+
+let globalMeses   = 12;
+let activeScenario = 'real';
+let chBE, chCosts;
+
+// ── Glossary ──
+const GLOSSARY = {
+  mrr: {
+    title: 'MRR — Monthly Recurring Revenue (Ingreso Mensual Recurrente)',
+    def:  'El ingreso predecible y recurrente que recibes cada mes de todos tus clientes activos bajo una suscripción. Es la métrica central de cualquier negocio SaaS.',
+    formula: 'MRR = Clientes activos × Precio mensual por cliente',
+    example: 'Con 50 clientes a $30/mes → MRR = $1,500/mes',
+    bench: 'Un MRR que crece más del 10% mensual se considera saludable en etapa temprana. El crecimiento del MRR debe superar siempre el crecimiento de los costos.'
+  },
+  arr: {
+    title: 'ARR — Annual Recurring Revenue (Ingreso Anual Recurrente)',
+    def:  'La proyección anual de tu MRR. Representa el ingreso recurrente que generarías en 12 meses si no hubiera ningún cambio. Es la métrica que usan los inversores para valorar startups SaaS.',
+    formula: 'ARR = MRR actual × 12',
+    example: 'Con MRR de $1,500 → ARR = $18,000/año',
+    bench: 'Los inversores de Venture Capital valoran startups SaaS entre 5× y 15× el ARR. Un ARR de $100K es la primera meta simbólica que se busca alcanzar.'
+  },
+  ltv: {
+    title: 'LTV — Lifetime Value (Valor de Vida del Cliente)',
+    def:  'El ingreso total promedio que esperas recibir de un cliente durante todo el tiempo que permanezca activo. Asume que el churn es constante y calcula el valor esperado estadísticamente.',
+    formula: 'LTV = Precio mensual ÷ Tasa de cancelación mensual\nOr: LTV = Precio mensual × (1 ÷ Churn%)',
+    example: 'Precio $30/mes, Churn 4%/mes → LTV = $30 ÷ 0.04 = $750 por cliente',
+    bench: 'Para un SaaS saludable el LTV debe ser al menos 3× el CAC. Con Churn del 10%, el cliente promedio dura ~10 meses. Con 2%, dura ~50 meses.'
+  },
+  cac: {
+    title: 'CAC — Customer Acquisition Cost (Costo de Adquisición de Clientes)',
+    def:  'Cuánto dinero gastas en promedio para conseguir un nuevo cliente. En este modelo se calcula solo sobre la publicidad, que es el gasto de adquisición más directo.',
+    formula: 'CAC = Presupuesto de publicidad mensual ÷ Clientes nuevos promedio por mes',
+    example: 'Publicidad $500/mes, promedio de 6 clientes nuevos/mes → CAC = $83',
+    bench: 'En SaaS B2B early-stage, un CAC de $50–$300 es normal. El objetivo es que CAC < LTV ÷ 3. Reducir el CAC con contenido orgánico (SEO, referidos) mejora drasticamente la rentabilidad.'
+  },
+  ratio: {
+    title: 'Ratio LTV/CAC — Eficiencia del Modelo de Negocio',
+    def:  'La métrica más importante de salud de un negocio SaaS. Mide si el valor que genera un cliente justifica lo que gastas en conseguirlo. Es la brújula para decidir si escalar el marketing.',
+    formula: 'Ratio = LTV ÷ CAC\n     = (Precio ÷ Churn%) ÷ (Publicidad ÷ Clientes/mes)',
+    example: 'LTV $750, CAC $100 → Ratio = 7.5× (excelente — puedes escalar publicidad)',
+    bench: '< 1× : Modelo no viable — destruyes valor\n1–3× : Viable pero ajustado — optimiza retención primero\n> 3× : Saludable — puedes invertir más en marketing\n> 5× : Óptimo — escala agresivamente'
+  },
+  churn: {
+    title: 'Churn Rate — Tasa de Cancelación Mensual',
+    def:  'El porcentaje de clientes activos que cancelan su suscripción cada mes. Es el mayor destructor de valor en un SaaS. Un churn alto hace casi imposible crecer porque pierdes clientes más rápido de lo que los consigues.',
+    formula: 'Churn mensual = Clientes cancelados este mes ÷ Clientes activos al inicio del mes × 100',
+    example: 'De 50 clientes activos, cancelan 2 → Churn = 2÷50 × 100 = 4%\nEso implica una vida promedio del cliente de 25 meses.',
+    bench: 'Excelente: < 1%/mes (empresas enterprise)\nBueno: 1–2%/mes (B2B con contrato anual)\nPromedio SMB: 3–5%/mes\nAlto: 6–10%/mes (problema de retención)\nCrítico: > 10%/mes (señal de producto sin product-market fit)'
+  },
+  breakeven: {
+    title: 'Break-even — Punto de Equilibrio',
+    def:  'El mes en que tu balance acumulado pasa de negativo a positivo. A partir de aquí has recuperado completamente la inversión inicial y el negocio opera en ganancias netas. Hay dos tipos: flujo mensual positivo (un mes rentable) y break-even acumulado (inversión recuperada).',
+    formula: 'Se alcanza cuando:\nΣ Flujos mensuales (mes 1 a N) = Inversión inicial',
+    example: 'Inversión $10,200. Si generas $600 netos/mes de ganancia → Break-even en mes 17 ($600 × 17 = $10,200)',
+    bench: 'Para startups bootstrapped (sin inversión externa), lograr break-even antes de 18–24 meses es el objetivo principal. Permite sobrevivir sin capital de riesgo.'
+  },
+  flujo: {
+    title: 'Flujo de Caja Mensual (Monthly Cash Flow)',
+    def:  'La diferencia entre todo lo que entra (MRR) y todo lo que sale (costos fijos + personal + publicidad + infraestructura) en un mes específico. Un flujo positivo significa que el mes fue rentable operativamente.',
+    formula: 'Flujo del mes = MRR − Costos totales del mes\n(Sin contar la inversión inicial, que es un costo único)',
+    example: 'MRR $1,500, Costos $900 → Flujo = +$600 (mes operativamente positivo)\nMRR $400, Costos $900 → Flujo = −$500 (mes en pérdida)',
+    bench: 'El primer mes con flujo positivo es una señal importante: significa que tus operaciones cubren sus propios costos. Pero el balance puede ser negativo aún (debes la inversión inicial).'
+  },
+  acum: {
+    title: 'Balance Acumulado (Cumulative Cash Flow)',
+    def:  'La suma de todos los flujos de caja desde la inversión inicial hasta el mes actual. Comienza negativo en −inversión inicial y crece cada mes que haya flujo positivo, hasta alcanzar cero (break-even) y luego ganancias.',
+    formula: 'Balance mes N = −Inversión inicial + Σ Flujos mes 1 a mes N',
+    example: 'Inversión $10,200. Flujos acumulados meses 1-12 = $8,500\n→ Balance mes 12 = −$1,700 (aún en recuperación)',
+    bench: 'Monitorea la curva mes a mes. Si sube consistentemente y la pendiente aumenta, el modelo es sólido. Si se aplana (saturación de clientes con alto churn), debes actuar en retención.'
+  }
+};
+
+function openPopup(term) {
+  const g = GLOSSARY[term];
+  if (!g) return;
+  $('gp-title').textContent   = g.title;
+  $('gp-def').textContent     = g.def;
+  $('gp-formula').textContent = g.formula;
+  $('gp-example').textContent = g.example;
+  $('gp-bench').textContent   = g.bench;
+  $('gloss-popup').classList.add('vis');
+  $('gloss-bd').classList.add('vis');
+}
+function closePopup() {
+  $('gloss-popup').classList.remove('vis');
+  $('gloss-bd').classList.remove('vis');
+}
+document.addEventListener('click', e => {
+  const t = e.target.closest('.term');
+  if (t && t.dataset.term) { e.stopPropagation(); openPopup(t.dataset.term); }
+});
+
+// ── Scenario presets (calibrated against real SaaS benchmarks) ──
+const SCENARIOS = {
+  pesi: { precio:30, c1:3,  crec:0, churn:10, inv:10200, conta:300, pub:200,  infra:100, s1:300, u1:30, s2:300, u2:70, s3:500, u3:150 },
+  real: { precio:30, c1:5,  crec:1, churn:4,  inv:10200, conta:300, pub:500,  infra:100, s1:300, u1:25, s2:300, u2:60, s3:500, u3:120 },
+  opti: { precio:30, c1:8,  crec:2, churn:2,  inv:10200, conta:300, pub:700,  infra:100, s1:300, u1:20, s2:300, u2:50, s3:500, u3:100 },
+};
+
+function setScenario(key) {
+  activeScenario = key;
+  const s = SCENARIOS[key];
+  Object.entries(s).forEach(([k, v]) => { const el = $(k); if (el) el.value = v; });
+  document.querySelectorAll('.scen-btn').forEach(b => b.classList.toggle('active', b.dataset.scen === key));
+  actualizar();
+}
+
+// ── Period ──
+function setPeriod(m) {
+  globalMeses = m;
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.toggle('active', +b.dataset.meses === m));
+  actualizar();
+}
+
+// ── Charts init ──
+function initCharts() {
+  const ax = { ticks:{color:'#4b5675',font:{size:10,family:'Inter'}}, grid:{color:'rgba(255,255,255,0.04)'}, border:{color:'transparent'} };
+  const lg = { labels:{color:'#4b5675',font:{size:11,family:'Inter'},boxWidth:10,boxHeight:2,padding:14} };
+  const an = { duration:340, easing:'easeInOutQuart' };
+
+  chBE = new Chart($('ch-be').getContext('2d'), {
+    type:'line',
+    data:{ labels:[], datasets:[
+      { label:'Optimista', data:[], borderColor:'#34d399', borderWidth:1.5, borderDash:[4,4], fill:false, tension:.38, pointRadius:0, pointHoverRadius:4 },
+      { label:'Realista',  data:[], borderColor:'#4f8ef7', borderWidth:2.5, fill:false, tension:.38, pointRadius:0, pointHoverRadius:5, pointBackgroundColor:'#4f8ef7' },
+      { label:'Pesimista', data:[], borderColor:'#f87171', borderWidth:1.5, borderDash:[4,4], fill:false, tension:.38, pointRadius:0, pointHoverRadius:4 },
+      { label:'Equilibrio ($0)', data:[], borderColor:'rgba(255,255,255,.1)', borderWidth:1, borderDash:[6,4], fill:false, pointRadius:0 },
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false, animation:an,
+      plugins:{ legend:{ display:true, ...lg } },
+      scales:{ x:ax, y:{ ...ax, ticks:{ ...ax.ticks, callback:v=>'$'+(v/1000).toFixed(0)+'k' } } }
+    }
+  });
+
+  chCosts = new Chart($('ch-costs').getContext('2d'), {
+    type:'bar',
+    data:{ labels:[], datasets:[
+      { label:'Infraestructura', data:[], backgroundColor:'rgba(100,116,139,.7)', borderRadius:2 },
+      { label:'Contabilidad',    data:[], backgroundColor:'rgba(148,163,184,.6)', borderRadius:2 },
+      { label:'Publicidad',      data:[], backgroundColor:'rgba(79,142,247,.75)', borderRadius:2 },
+      { label:'Personal',        data:[], backgroundColor:'rgba(248,113,113,.75)',borderRadius:2 },
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false, animation:an,
+      plugins:{ legend:{ display:true, ...lg } },
+      scales:{ x:{ stacked:true, ...ax }, y:{ stacked:true, ...ax, ticks:{ ...ax.ticks, callback:v=>'$'+v.toLocaleString() } } }
+    }
+  });
+}
+
+// ── Model ──
+function computeCosts(mes, activos, p) {
+  if (mes === 0) return { conta:0, infra:0, pub:0, personal:0, total:0, who:[] };
+  const infra    = p.infra + Math.floor(activos / 25) * 18;
+  const op1      = activos >= p.umbral1 ? p.sal1 : 0;
+  const op2      = activos >= p.umbral2 ? p.sal2 : 0;
+  const op3      = activos >= p.umbral3 ? p.sal3 : 0;
+  const personal = op1 + op2 + op3;
+  const who      = [...(op1?['Op.1']:[]), ...(op2?['Op.2']:[]), ...(op3?['Dev']:[])];
+  return { conta:p.conta, infra, pub:p.pub, personal, total:p.conta+infra+p.pub+personal, who };
+}
+
+function runModel(p, gF=1, chAdj=0, meses=12) {
+  const churn = Math.max(0, p.churn + chAdj) / 100;
+  const rows  = [];
+  let activos = 0, acum = -p.inversion;
+  rows.push({ mes:0, nuevos:0, cancelados:0, activos:0, mrr:0, costs:{conta:0,infra:0,pub:0,personal:0,total:0,who:[]}, flujo:-p.inversion, acum });
+  for (let mes = 1; mes <= meses; mes++) {
+    const nuevos     = Math.max(1, Math.round((p.c1 + (mes-1)*p.crec) * gF));
+    const cancelados = Math.round(activos * churn);
+    activos = Math.max(0, activos - cancelados + nuevos);
+    const mrr   = activos * p.precio;
+    const costs = computeCosts(mes, activos, p);
+    const flujo = mrr - costs.total;
+    acum += flujo;
+    rows.push({ mes, nuevos, cancelados, activos, mrr, costs, flujo, acum });
+  }
+  return rows;
+}
+
+function getParams() {
+  return {
+    inversion:+$('inv').value, precio:+$('precio').value,
+    c1:+$('c1').value,         crec:+$('crec').value, churn:+$('churn').value,
+    conta:+$('conta').value,   pub:+$('pub').value,   infra:+$('infra').value,
+    sal1:+$('s1').value, umbral1:+$('u1').value,
+    sal2:+$('s2').value, umbral2:+$('u2').value,
+    sal3:+$('s3').value, umbral3:+$('u3').value,
+  };
+}
+
+function yearSlice(rows, from, to) {
+  const s = rows.filter(r => r.mes >= from && r.mes <= to);
+  if (!s.length) return null;
+  const revenue = s.reduce((a,r)=>a+r.mrr,0);
+  const costs   = s.reduce((a,r)=>a+r.costs.total,0);
+  const last    = s[s.length-1];
+  return { revenue, costs, profit:revenue-costs, mrr:last.mrr, activos:last.activos, acum:last.acum };
+}
+
+function renderYearStat(id, st) {
+  if (!st) return;
+  $(id).innerHTML = `
+    <div><div class="yr-sl">Ingresos</div><div class="yr-sv">${fmt(st.revenue)}</div></div>
+    <div><div class="yr-sl">Costos</div><div class="yr-sv">${fmt(st.costs)}</div></div>
+    <div><div class="yr-sl">Utilidad</div><div class="yr-sv" style="color:${st.profit>=0?'var(--pos)':'var(--neg)'}">${fmtS(st.profit)}</div></div>
+    <div><div class="yr-sl">MRR cierre</div><div class="yr-sv" style="color:var(--pos)">${fmt(st.mrr)}</div></div>
+    <div><div class="yr-sl">Clientes</div><div class="yr-sv" style="color:var(--accent)">${st.activos}</div></div>
+    <div><div class="yr-sl">Balance</div><div class="yr-sv" style="color:${st.acum>=0?'var(--pos)':'var(--neg)'}">${fmtS(st.acum)}</div></div>
+  `;
+}
+
+// ── Main update ──
+function actualizar() {
+  const p = getParams();
+  const m = globalMeses;
+
+  // Display values
+  $('v-precio').textContent = fmt(p.precio);
+  $('v-c1').textContent     = p.c1;
+  $('v-crec').textContent   = p.crec === 0 ? 'Sin crecimiento' : `+${p.crec} / mes`;
+  $('v-churn').textContent  = p.churn + '%';
+  $('v-inv').textContent    = fmt(p.inversion);
+  $('v-conta').textContent  = fmt(p.conta);
+  $('v-pub').textContent    = fmt(p.pub);
+  $('v-infra').textContent  = fmt(p.infra);
+  $('v-s1').textContent = fmt(p.sal1); $('v-u1').textContent = p.umbral1+' clientes';
+  $('v-s2').textContent = fmt(p.sal2); $('v-u2').textContent = p.umbral2+' clientes';
+  $('v-s3').textContent = fmt(p.sal3); $('v-u3').textContent = p.umbral3+' clientes';
+
+  ['k-mes-lbl','k-mes-lbl2','k-mes-lbl3'].forEach(id => $(id).textContent = m);
+
+  // 3 scenarios with calibrated deltas
+  const base  = runModel(p, 1,    0,  m);
+  const optim = runModel(p, 1.4, -2,  m);
+  const pesi  = runModel(p, 0.6,  6,  m);   // +6pp churn = very pessimistic
+  const last  = base[m];
+
+  // Stats
+  const churnRate = p.churn / 100;
+  const avgNew    = base.slice(1).reduce((s,r)=>s+r.nuevos,0) / m;
+  const ltv       = churnRate > 0 ? p.precio / churnRate : null;
+  const cac       = p.pub > 0 && avgNew > 0 ? p.pub / avgNew : null;
+  const ratio     = ltv && cac ? ltv / cac : null;
+  const payback   = cac && p.precio > 0 ? Math.ceil(cac / p.precio) : null;
+
+  // KPIs
+  $('k-c12').textContent = last.activos;
+  $('k-mrr').textContent = fmt(last.mrr);
+  $('k-arr').textContent = fmt(last.mrr * 12);
+  $('k-ltv').textContent = ltv ? fmt(ltv) : '—';
+  $('k-cac').textContent = cac ? fmt(cac) : '—';
+
+  const ratioEl = $('k-ratio');
+  if (ratio) { ratioEl.textContent = ratio.toFixed(1)+'x'; ratioEl.className = 'kpi-val '+(ratio>=3?'p':ratio>=1?'w':'n'); }
+  else        { ratioEl.textContent = '—'; ratioEl.className = 'kpi-val'; }
+
+  let be = 'No alcanzado';
+  for (let i = 1; i <= m; i++) { if (base[i].acum >= 0) { be = 'Mes '+i; break; } }
+  $('k-be').textContent  = be;
+
+  const balEl = $('k-bal');
+  balEl.textContent = fmtS(last.acum);
+  balEl.className   = 'kpi-val '+(last.acum>=0?'p':'n');
+
+  // Advisory
+  updateAdvisory(p, ratio, ltv, cac, payback, base, m);
+
+  // Annual summary
+  const ys = $('year-summary');
+  if (m > 12) {
+    ys.classList.add('vis');
+    renderYearStat('yr1-stats', yearSlice(base,1,12));
+    renderYearStat('yr2-stats', yearSlice(base,13,24));
+    const y3c = $('yr3-card');
+    if (m >= 36) { y3c.style.display=''; renderYearStat('yr3-stats', yearSlice(base,25,36)); }
+    else            y3c.style.display='none';
+  } else { ys.classList.remove('vis'); }
+
+  // Charts
+  const labels = base.map(r => globalMeses<=12?'M'+r.mes:(r.mes%3===0||r.mes===0)?'M'+r.mes:'');
+  chBE.data.labels           = labels;
+  chBE.data.datasets[0].data = optim.map(r=>r.acum);
+  chBE.data.datasets[1].data = base.map(r=>r.acum);
+  chBE.data.datasets[2].data = pesi.map(r=>r.acum);
+  chBE.data.datasets[3].data = base.map(()=>0);
+  chBE.update();
+
+  const cstRows = m<=12 ? base.slice(1) : base.slice(1).filter(r=>r.mes%3===0);
+  chCosts.data.labels           = cstRows.map(r=>'M'+r.mes);
+  chCosts.data.datasets[0].data = cstRows.map(r=>r.costs.infra);
+  chCosts.data.datasets[1].data = cstRows.map(r=>r.costs.conta);
+  chCosts.data.datasets[2].data = cstRows.map(r=>r.costs.pub);
+  chCosts.data.datasets[3].data = cstRows.map(r=>r.costs.personal);
+  chCosts.update();
+
+  renderTimeline(base, p);
+  renderTable(base, p);
+}
+
+function updateAdvisory(p, ratio, ltv, cac, payback, base, m) {
+  const box = $('advisory'); const title = $('adv-title'); const text = $('adv-text');
+  box.className = 'advisory';
+
+  const hires = []; let pp = 0;
+  base.slice(1).forEach(r => { if (r.costs.personal>pp) { const d=r.costs.personal-pp; hires.push(`mes ${r.mes} (+${fmt(d)}/mes)`); pp=r.costs.personal; } });
+  const hStr = hires.length ? ` Contrataciones detectadas: ${hires.join(' · ')}.` : ' Sin contrataciones proyectadas en este período.';
+
+  if (!p.pub || !cac) {
+    box.classList.add('warn');
+    title.textContent = 'Activa el presupuesto de publicidad para calcular el CAC y validar el modelo';
+    text.textContent  = 'Sin inversión en marketing no es posible calcular cuánto cuesta adquirir cada cliente (CAC). Esa métrica determina si tiene sentido escalar.' + hStr;
+  } else if (ratio >= 3) {
+    box.classList.add('good');
+    title.textContent = `Modelo saludable — LTV/CAC de ${ratio.toFixed(1)}x, payback en ${payback} ${payback===1?'mes':'meses'}`;
+    text.textContent  = `Por cada $1 en publicidad recuperas ${ratio.toFixed(1)}x en valor de cliente. Puedes escalar la publicidad. Prioridad: reducir el churn del ${p.churn}% para extender el LTV.` + hStr;
+  } else if (ratio >= 1) {
+    const bc = Math.max(1, p.churn-2), bL = p.precio/(bc/100);
+    box.classList.add('warn');
+    title.textContent = `Modelo viable pero ajustado — LTV/CAC de ${ratio.toFixed(1)}x`;
+    text.textContent  = `Reducir churn de ${p.churn}% a ${bc}% llevaría el ratio a ${(bL/cac).toFixed(1)}x. Payback actual: ${payback} meses. Trabaja retención antes de escalar publicidad.` + hStr;
+  } else {
+    box.classList.add('bad');
+    title.textContent = `Advertencia: LTV/CAC de ${ratio.toFixed(1)}x — modelo no rentable en configuración actual`;
+    text.textContent  = `Con churn ${p.churn}% y CAC ${fmt(cac)}, cada cliente genera menos de lo que cuesta conseguirlo. Opciones: sube el precio, reduce publicidad, o mejora la retención urgentemente.` + hStr;
+  }
+}
+
+function renderTimeline(rows, p) {
+  const evEl = $('tl-events'), mEl = $('tl-months');
+  evEl.innerHTML = ''; mEl.innerHTML = '';
+  const m = globalMeses;
+
+  // Month labels
+  const step = m<=12?1:m<=24?2:3;
+  for (let i=0;i<=m;i+=step) {
+    const sp = document.createElement('span');
+    sp.className = 'tl-m'+(i===0?' el':i===m?' er':'');
+    sp.style.left = (i/m*100)+'%';
+    if (m>12 && i>0 && i%12===0) { sp.textContent='Año '+(i/12); sp.style.fontWeight='600'; sp.style.color='var(--ts)'; }
+    else sp.textContent='M'+i;
+    mEl.appendChild(sp);
+  }
+
+  const evts = [];
+
+  // M0: Inversión inicial
+  evts.push({ mes:0, color:'#f87171', label:`Inversión inicial\n${fmt(p.inversion)}` });
+
+  // Hire thresholds
+  [ {u:p.umbral1,s:p.sal1,n:'Operador 1',  c:'#4f8ef7'},
+    {u:p.umbral2,s:p.sal2,n:'Operador 2',  c:'#c084fc'},
+    {u:p.umbral3,s:p.sal3,n:'Desarrollador',c:'#fbbf24'} ].forEach(h => {
+    for(let i=1;i<=m;i++) { if(rows[i].activos>=h.u && rows[i-1].activos<h.u) { evts.push({mes:i,color:h.c,label:`${h.n}\n+${fmt(h.s)}/mes\n${rows[i].activos} clientes`}); break; } }
+  });
+
+  // Primer flujo mensual positivo
+  for(let i=1;i<=m;i++) { if(rows[i].flujo>=0 && rows[i-1].flujo<0) { evts.push({mes:i,color:'#fb923c',label:`Primer flujo\npositivo\nMes ${i}`}); break; } }
+
+  // Break-even acumulado
+  for(let i=1;i<=m;i++) { if(rows[i].acum>=0 && rows[i-1].acum<0) { evts.push({mes:i,color:'#34d399',label:`Break-even\nInversión recuperada\nMes ${i}`}); break; } }
+
+  // Year dividers (subtle)
+  if(m>12) [12,24].filter(y=>y<m).forEach(y=>evts.push({mes:y,color:'rgba(255,255,255,.15)',label:`Fin Año ${y/12}`,yr:true}));
+
+  evts.sort((a,b)=>a.mes-b.mes);
+  let ac=0;
+  evts.forEach(ev=>{ ev.side = ev.yr?'below':(ac++%2===0?'above':'below'); });
+
+  evts.forEach(ev=>{
+    const pct=(ev.mes/m*100).toFixed(2);
+    const div=document.createElement('div');
+    div.className='tl-event '+ev.side;
+    div.style.left=pct+'%';
+    div.style.transform=ev.mes===0?'translateX(0)':ev.mes===m?'translateX(-100%)':'translateX(-50%)';
+    const lbl=ev.label.split('\n').join('<br>');
+    const ds=ev.yr?'8px':'12px'; const op=ev.yr?'.4':'1'; const lo=ev.yr?'.2':'.5';
+    if(ev.side==='above') div.innerHTML=`<div class="tl-lbl" style="color:${ev.color};opacity:${op}">${lbl}</div><div class="tl-line" style="background:${ev.color};opacity:${lo}"></div><div class="tl-dot" style="background:${ev.color};opacity:${op};width:${ds};height:${ds}"></div>`;
+    else                  div.innerHTML=`<div class="tl-dot" style="background:${ev.color};opacity:${op};width:${ds};height:${ds}"></div><div class="tl-line" style="background:${ev.color};opacity:${lo}"></div><div class="tl-lbl" style="color:${ev.color};opacity:${op}">${lbl}</div>`;
+    evEl.appendChild(div);
+  });
+}
+
+function renderTable(rows, p) {
+  const tbody=$('tbody'); tbody.innerHTML='';
+  let pp=0;
+  rows.forEach(r=>{
+    const isInv=r.mes===0, isBreak=r.mes>0&&r.acum>=0&&rows[r.mes-1].acum<0, isHire=!isInv&&r.costs.personal>pp;
+    const isYr=!isInv&&r.mes%12===1&&r.mes>1&&globalMeses>12;
+    if(isYr){ const sep=document.createElement('tr'); sep.className='yr-sep'; sep.innerHTML=`<td colspan="13">Año ${Math.ceil(r.mes/12)} — Meses ${r.mes}–${Math.min(r.mes+11,globalMeses)}</td>`; tbody.appendChild(sep); }
+    const tr=document.createElement('tr');
+    if(isInv)  tr.classList.add('r-inv');
+    if(isBreak)tr.classList.add('r-be');
+    if(isHire) tr.classList.add('r-hire');
+    if(!isInv) pp=r.costs.personal;
+    const fcls=r.flujo>=0?'p':'n', bcls=r.acum>=0?'p':'n';
+    let hl=''; if(isHire){ const d=r.costs.personal-(rows[r.mes-1]?.costs?.personal||0); hl=`<span class="hire-lbl">+${fmt(d)}/mes — ${r.costs.who.slice(-1)[0]} contratado</span>`; }
+    if(isInv) tr.innerHTML=`<td>0</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>${fmt(p.inversion)}</td><td class="n">${fmtS(r.flujo)}</td><td><span class="tag n">${fmtS(r.acum)}</span></td>`;
+    else tr.innerHTML=`<td>${r.mes}</td><td>+${r.nuevos}</td><td style="color:var(--neg)">${r.cancelados>0?'-'+r.cancelados:'0'}</td><td>${r.activos}</td><td>${fmt(r.mrr)}</td><td style="color:var(--ts);font-size:.7rem">${fmt(r.mrr*12)}</td><td>${fmt(r.costs.conta)}</td><td>${fmt(r.costs.infra)}</td><td>${fmt(r.costs.pub)}</td><td>${r.costs.personal>0?fmt(r.costs.personal):'—'}${hl}</td><td>${fmt(r.costs.total)}</td><td class="${fcls}">${fmtS(r.flujo)}</td><td><span class="tag ${bcls}">${fmtS(r.acum)}</span></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded', ()=>{
+  $('fecha').textContent = new Date().toLocaleDateString('es-VE',{day:'2-digit',month:'long',year:'numeric'});
+  initCharts();
+  setScenario('real');
+  ['precio','c1','crec','churn','inv','conta','pub','infra','s1','u1','s2','u2','s3','u3'].forEach(id=>$(id).addEventListener('input',actualizar));
+});
+</script>
+</body>
+</html>
