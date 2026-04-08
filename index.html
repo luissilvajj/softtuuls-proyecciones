@@ -1056,7 +1056,10 @@ document.addEventListener('DOMContentLoaded', ()=>{
   $('fecha').textContent = new Date().toLocaleDateString('es-VE',{day:'2-digit',month:'long',year:'numeric'});
   initCharts();
   setScenario('real');
-  ['precio','c1','crec','churn','inv','conta','pub','infra','s1','u1','s2','u2','s3','u3'].forEach(id=>$(id).addEventListener('input',actualizar));
+  ['precio','c1','crec','churn','inv','conta','pub','infra','tax','s1','u1','s2','u2','s3','u3'].forEach(id=>{
+    const el = $(id);
+    if(el) el.addEventListener('input',actualizar);
+  });
 
   // Auto-theme update for charts
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
