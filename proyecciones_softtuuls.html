@@ -198,6 +198,17 @@
     /* ── Footer ── */
     footer { margin-top:60px; padding:18px 0; border-top:1px solid var(--bdr); text-align:center; font-size:.66rem; color:var(--tm); }
 
+    /* ── Strategy Btns ── */
+    .strat-btns { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:15px; }
+    .strat-btn {
+      padding:10px; border-radius:10px; border:1px solid var(--bdr);
+      background:var(--s2); color:var(--tm); font-size:.7rem; font-weight:600;
+      cursor:pointer; display:flex; flex-direction:column; gap:3px; transition:all .2s;
+    }
+    .strat-btn.active { border-color:var(--accent); background:rgba(79,142,247,.08); color:var(--tp); }
+    .strat-btn .st { font-size:.58rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; opacity:.7; }
+    .strat-btn:hover:not(.active) { border-color:var(--bl); background:var(--s3); }
+
     /* ── Animations ── */
     @keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
     .top-bar,.controls-wrap,.advisory,.year-summary,.kpi-grid,.charts-row,.timeline-card,.table-card { animation:fu .35s ease both; }
@@ -296,31 +307,29 @@
     </div>
 
     <div class="ctrl-sec">
-      <div class="ctrl-ttl">Costos fijos y operativos</div>
+      <div class="ctrl-ttl">Estrategia de escalamiento</div>
       <div class="ctrl-grid">
-        <div>
-          <span class="ctrl-lbl">Inversión inicial (legal + tech)</span>
-          <div class="ctrl-val" id="v-inv">$10,200</div>
-          <input type="range" id="inv" min="5000" max="50000" step="200" value="10200" />
-          <div class="ctrl-hint">Seniat, homologación, desarrollo, licencias iniciales</div>
+        <div class="strat-btns">
+          <button class="strat-btn active" id="mode-growth" onclick="setHiringMode('growth')">
+            <span class="st">Crecimiento</span>
+            <span>Contratar por Capacidad</span>
+          </button>
+          <button class="strat-btn" id="mode-boot" onclick="setHiringMode('boot')">
+            <span class="st">Bootstrapped</span>
+            <span>Contratar por Rentabilidad</span>
+          </button>
         </div>
         <div>
-          <span class="ctrl-lbl">Servicios contables mensuales</span>
-          <div class="ctrl-val" id="v-conta">$300</div>
-          <input type="range" id="conta" min="0" max="800" step="50" value="300" />
-          <div class="ctrl-hint">Declaraciones, IGTF, nómina, auditoría</div>
-        </div>
-        <div>
-          <span class="ctrl-lbl">Publicidad digital mensual</span>
-          <div class="ctrl-val" id="v-pub">$500</div>
-          <input type="range" id="pub" min="0" max="3000" step="50" value="500" />
-          <div class="ctrl-hint">Google Ads, Meta, LinkedIn, YouTube, TikTok</div>
-        </div>
-        <div>
-          <span class="ctrl-lbl">Infraestructura cloud base</span>
+          <span class="ctrl-lbl">Presupuesto p/ Infraestructura</span>
           <div class="ctrl-val" id="v-infra">$100</div>
-          <input type="range" id="infra" min="20" max="600" step="10" value="100" />
-          <div class="ctrl-hint">Escala automáticamente +$18 por cada 25 clientes</div>
+          <input type="range" id="infra" min="0" max="1000" step="50" value="100" />
+          <div class="ctrl-hint">Base mensual + escala por volumen</div>
+        </div>
+        <div>
+          <span class="ctrl-lbl">Impuestos sobre utilidad / IVA</span>
+          <div class="ctrl-val" id="v-tax">15%</div>
+          <input type="range" id="tax" min="0" max="40" step="1" value="15" />
+          <div class="ctrl-hint">Carga fiscal estimada sobre beneficios netos</div>
         </div>
       </div>
     </div>
@@ -329,34 +338,25 @@
       <div class="ctrl-ttl">Plan de contratación automático</div>
       <div class="ctrl-grid">
         <div>
-          <span class="ctrl-lbl">Operador técnico 1 — salario</span>
+          <span class="ctrl-lbl">Op. Técnico 1 — Salario</span>
           <div class="ctrl-val" id="v-s1">$300</div>
-          <input type="range" id="s1" min="100" max="1200" step="50" value="300" />
+          <input type="range" id="s1" min="0" max="2000" step="50" value="300" />
+          <div class="ctrl-hint">Umbral: <span id="v-u1">25</span> clientes</div>
+          <input type="range" id="u1" min="1" max="500" step="5" value="25" />
         </div>
         <div>
-          <span class="ctrl-lbl">Contratar Op. 1 al alcanzar</span>
-          <div class="ctrl-val" id="v-u1">25 clientes</div>
-          <input type="range" id="u1" min="5" max="120" step="5" value="25" />
-        </div>
-        <div>
-          <span class="ctrl-lbl">Operador técnico 2 — salario</span>
+          <span class="ctrl-lbl">Op. Técnico 2 — Salario</span>
           <div class="ctrl-val" id="v-s2">$300</div>
-          <input type="range" id="s2" min="100" max="1200" step="50" value="300" />
+          <input type="range" id="s2" min="0" max="2000" step="50" value="300" />
+          <div class="ctrl-hint">Umbral: <span id="v-u2">60</span> clientes</div>
+          <input type="range" id="u2" min="1" max="1000" step="10" value="60" />
         </div>
         <div>
-          <span class="ctrl-lbl">Contratar Op. 2 al alcanzar</span>
-          <div class="ctrl-val" id="v-u2">60 clientes</div>
-          <input type="range" id="u2" min="10" max="200" step="5" value="60" />
-        </div>
-        <div>
-          <span class="ctrl-lbl">Desarrollador / Soporte — salario</span>
+          <span class="ctrl-lbl">Desarrollador / Soporte — Salario</span>
           <div class="ctrl-val" id="v-s3">$500</div>
-          <input type="range" id="s3" min="100" max="2000" step="50" value="500" />
-        </div>
-        <div>
-          <span class="ctrl-lbl">Contratar Dev al alcanzar</span>
-          <div class="ctrl-val" id="v-u3">120 clientes</div>
-          <input type="range" id="u3" min="30" max="400" step="10" value="120" />
+          <input type="range" id="s3" min="0" max="3000" step="100" value="500" />
+          <div class="ctrl-hint">Umbral: <span id="v-u3">120</span> clientes</div>
+          <input type="range" id="u3" min="1" max="2000" step="20" value="120" />
         </div>
       </div>
     </div>
@@ -391,44 +391,47 @@
   <!-- ── KPI Grid ── -->
   <div class="kpi-grid">
     <div class="kpi-card">
-      <div class="kpi-lbl">Clientes activos mes <span id="k-mes-lbl">12</span></div>
-      <div class="kpi-val a" id="k-c12">—</div>
-      <div class="kpi-sub">escenario realista, con <span class="term" data-term="churn">churn</span> aplicado</div>
+      <div class="kpi-lbl"><span class="term" data-term="mrr">MRR</span> Mes <span id="k-mes-lbl">12</span></div>
+      <div class="kpi-val a" id="k-mrr">$0</div>
+      <div class="kpi-sub">Ingreso recurrente mensual</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-lbl"><span class="term" data-term="mrr">MRR</span> mes <span id="k-mes-lbl2">12</span></div>
-      <div class="kpi-val p" id="k-mrr">—</div>
-      <div class="kpi-sub">ingreso mensual recurrente final</div>
+      <div class="kpi-lbl"><span class="term" data-term="margin">Margen Bruto</span></div>
+      <div class="kpi-val" id="k-margin">0%</div>
+      <div class="kpi-sub" id="k-gross-sub">Salud de la operación</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-lbl"><span class="term" data-term="arr">ARR</span> proyectado</div>
-      <div class="kpi-val" id="k-arr">—</div>
-      <div class="kpi-sub">MRR final × 12</div>
+      <div class="kpi-lbl"><span class="term" data-term="ebitda">EBITDA Mensual</span></div>
+      <div class="kpi-val" id="k-ebitda">$0</div>
+      <div class="kpi-sub">Ganancia operativa neta</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-lbl"><span class="term" data-term="rule40">Rule of 40</span></div>
+      <div class="kpi-val" id="k-rule40">0%</div>
+      <div class="kpi-sub">Crecimiento + Margen</div>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-lbl">Clientes Activos</div>
+      <div class="kpi-val p" id="k-c12">0</div>
+      <div class="kpi-sub">Al cierre del mes <span id="k-mes-lbl2">12</span></div>
     </div>
     <div class="kpi-card">
       <div class="kpi-lbl"><span class="term" data-term="ltv">LTV</span> por cliente</div>
-      <div class="kpi-val" id="k-ltv">—</div>
-      <div class="kpi-sub">precio ÷ churn%</div>
+      <div class="kpi-val" id="k-ltv">$0</div>
+      <div class="kpi-sub">Vida promedio del usuario</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-lbl"><span class="term" data-term="cac">CAC</span> estimado</div>
-      <div class="kpi-val" id="k-cac">—</div>
-      <div class="kpi-sub">publicidad ÷ clientes nuevos promedio</div>
+      <div class="kpi-val" id="k-cac">$0</div>
+      <div class="kpi-sub">Costo de adquisición</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-lbl">Ratio <span class="term" data-term="ratio">LTV/CAC</span></div>
-      <div class="kpi-val" id="k-ratio">—</div>
-      <div class="kpi-sub">meta: mayor a 3× para escalar</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-lbl"><span class="term" data-term="breakeven">Break-even</span></div>
-      <div class="kpi-val a" id="k-be">—</div>
-      <div class="kpi-sub">primer mes con balance positivo</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-lbl"><span class="term" data-term="acum">Balance acumulado</span> mes <span id="k-mes-lbl3">12</span></div>
-      <div class="kpi-val" id="k-bal">—</div>
-      <div class="kpi-sub">ganancia neta al cierre del período</div>
+      <div class="kpi-lbl"><span class="term" data-term="ratio">Ratio LTV/CAC</span></div>
+      <div class="kpi-val" id="k-ratio">0x</div>
+      <div class="kpi-sub">Eficiencia del marketing</div>
     </div>
   </div>
 
@@ -567,8 +570,37 @@ const GLOSSARY = {
     formula: 'Balance mes N = −Inversión inicial + Σ Flujos mes 1 a mes N',
     example: 'Inversión $10,200. Flujos acumulados meses 1-12 = $8,500\n→ Balance mes 12 = −$1,700 (aún en recuperación)',
     bench: 'Monitorea la curva mes a mes. Si sube consistentemente y la pendiente aumenta, el modelo es sólido. Si se aplana (saturación de clientes con alto churn), debes actuar en retención.'
+  },
+  ebitda: {
+    title: 'EBITDA — Ganancia Operativa',
+    def: 'Earnings Before Interest, Taxes, Depreciation, and Amortization. Es la medida pura de cuánto dinero genera el negocio antes de restarle impuestos y otros gastos no operativos.',
+    formula: 'EBITDA = Ingresos (MRR) - Gastos Operativos',
+    example: 'MRR $10,000, Gastos $4,000 → EBITDA $6,000',
+    bench: 'En SaaS maduros, un margen EBITDA del 20-30% es excelente.'
+  },
+  margin: {
+    title: 'Margen Bruto (Gross Margin)',
+    def: 'Qué porcentaje de tus ingresos queda después de pagar los costos directos de servir a los clientes (infraestructura y soporte).',
+    formula: 'Margen = (Ingresos - Costos Directos) / Ingresos',
+    example: 'MRR $1,000, Infra $100, Soporte $200 → Margen Bruto = 70%',
+    bench: '80-90% es el benchmark de oro para software.'
+  },
+  rule40: {
+    title: 'Rule of 40 — Regla del 40',
+    def: 'Un principio que dice que para una startup sana, la suma del crecimiento de ingresos y el margen EBITDA debe ser al menos del 40%.',
+    formula: 'Ratio = % Crecimiento Mensual + % Margen EBITDA',
+    example: 'Crecimiento 15%, Margen EBITDA 30% → Suma = 45% (Pasa la regla)',
+    bench: '> 40% es señal de una empresa excepcionalmente eficiente.'
   }
 };
+
+let activeHiringMode = 'growth';
+function setHiringMode(mode) {
+  activeHiringMode = mode;
+  document.getElementById('mode-growth').classList.toggle('active', mode === 'growth');
+  document.getElementById('mode-boot').classList.toggle('active', mode === 'boot');
+  actualizar();
+}
 
 function openPopup(term) {
   const g = GLOSSARY[term];
@@ -662,14 +694,39 @@ function initCharts() {
 }
 
 // ── Model ──
-function computeCosts(mes, activos, p) {
+function computeCosts(mes, activos, mrr, p) {
   if (mes === 0) return { conta:0, infra:0, pub:0, personal:0, total:0, who:[] };
-  const infra    = p.infra + Math.floor(activos / 25) * 18;
-  const op1      = activos >= p.umbral1 ? p.sal1 : 0;
-  const op2      = activos >= p.umbral2 ? p.sal2 : 0;
-  const op3      = activos >= p.umbral3 ? p.sal3 : 0;
-  const personal = op1 + op2 + op3;
-  const who      = [...(op1?['Op.1']:[]), ...(op2?['Op.2']:[]), ...(op3?['Dev']:[])];
+  
+  const infra = p.infra + Math.floor(activos / 25) * 18;
+  
+  // Hiring Logic based on Strategy
+  let personal = 0;
+  const who = [];
+  
+  const roles = [
+    { s: p.sal1, u: p.umbral1, n: 'Op.1' },
+    { s: p.sal2, u: p.umbral2, n: 'Op.2' },
+    { s: p.sal3, u: p.umbral3, n: 'Dev' },
+  ];
+
+  roles.forEach(r => {
+    if (r.s <= 0) return;
+    let hire = false;
+    
+    if (activeHiringMode === 'growth') {
+      // GROWTH: hire by client capacity
+      if (activos >= r.u) hire = true;
+    } else {
+      // BOOTSTRAPPED: hire only if profit covers salary + 20% buffer
+      // and we have also reached the minimum client capacity
+      const currentExpenses = p.conta + infra + p.pub + personal;
+      const profitBeforeThisHire = mrr - currentExpenses;
+      if (activos >= r.u && profitBeforeThisHire >= (r.s * 1.2)) hire = true;
+    }
+
+    if (hire) { personal += r.s; who.push(r.n); }
+  });
+
   return { conta:p.conta, infra, pub:p.pub, personal, total:p.conta+infra+p.pub+personal, who };
 }
 
@@ -677,16 +734,21 @@ function runModel(p, gF=1, chAdj=0, meses=12) {
   const churn = Math.max(0, p.churn + chAdj) / 100;
   const rows  = [];
   let activos = 0, acum = -p.inversion;
-  rows.push({ mes:0, nuevos:0, cancelados:0, activos:0, mrr:0, costs:{conta:0,infra:0,pub:0,personal:0,total:0,who:[]}, flujo:-p.inversion, acum });
+  rows.push({ mes:0, nuevos:0, cancelados:0, activos:0, mrr:0, costs:{conta:0,infra:0,pub:0,personal:0,total:0,who:[]}, flujo:-p.inversion, acum, tax:0 });
+  
   for (let mes = 1; mes <= meses; mes++) {
     const nuevos     = Math.max(1, Math.round((p.c1 + (mes-1)*p.crec) * gF));
     const cancelados = Math.round(activos * churn);
     activos = Math.max(0, activos - cancelados + nuevos);
     const mrr   = activos * p.precio;
-    const costs = computeCosts(mes, activos, p);
-    const flujo = mrr - costs.total;
+    const costs = computeCosts(mes, activos, mrr, p);
+    
+    const profitBeforeTax = mrr - costs.total;
+    const tax = profitBeforeTax > 0 ? profitBeforeTax * (p.tax / 100) : 0;
+    const flujo = profitBeforeTax - tax;
+    
     acum += flujo;
-    rows.push({ mes, nuevos, cancelados, activos, mrr, costs, flujo, acum });
+    rows.push({ mes, nuevos, cancelados, activos, mrr, costs, flujo, acum, tax });
   }
   return rows;
 }
@@ -695,7 +757,8 @@ function getParams() {
   return {
     inversion:+$('inv').value, precio:+$('precio').value,
     c1:+$('c1').value,         crec:+$('crec').value, churn:+$('churn').value,
-    conta:+$('conta').value,   pub:+$('pub').value,   infra:+$('infra').value,
+    tax:+$('tax').value,
+    conta:300,   pub:500,   infra:+$('infra').value,
     sal1:+$('s1').value, umbral1:+$('u1').value,
     sal2:+$('s2').value, umbral2:+$('u2').value,
     sal3:+$('s3').value, umbral3:+$('u3').value,
@@ -733,13 +796,11 @@ function actualizar() {
   $('v-c1').textContent     = p.c1;
   $('v-crec').textContent   = p.crec === 0 ? 'Sin crecimiento' : `+${p.crec} / mes`;
   $('v-churn').textContent  = p.churn + '%';
-  $('v-inv').textContent    = fmt(p.inversion);
-  $('v-conta').textContent  = fmt(p.conta);
-  $('v-pub').textContent    = fmt(p.pub);
   $('v-infra').textContent  = fmt(p.infra);
-  $('v-s1').textContent = fmt(p.sal1); $('v-u1').textContent = p.umbral1+' clientes';
-  $('v-s2').textContent = fmt(p.sal2); $('v-u2').textContent = p.umbral2+' clientes';
-  $('v-s3').textContent = fmt(p.sal3); $('v-u3').textContent = p.umbral3+' clientes';
+  $('v-tax').textContent    = p.tax + '%';
+  $('v-s1').textContent = fmt(p.sal1); $('v-u1').textContent = p.umbral1;
+  $('v-s2').textContent = fmt(p.sal2); $('v-u2').textContent = p.umbral2;
+  $('v-s3').textContent = fmt(p.sal3); $('v-u3').textContent = p.umbral3;
 
   ['k-mes-lbl','k-mes-lbl2','k-mes-lbl3'].forEach(id => $(id).textContent = m);
 
@@ -760,21 +821,28 @@ function actualizar() {
   // KPIs
   $('k-c12').textContent = last.activos;
   $('k-mrr').textContent = fmt(last.mrr);
-  $('k-arr').textContent = fmt(last.mrr * 12);
+  
+  // New Investor Metrics
+  const grossMargin = last.mrr > 0 ? ((last.mrr - (last.costs.infra + last.costs.personal)) / last.mrr) * 100 : 0;
+  $('k-margin').textContent = grossMargin.toFixed(0) + '%';
+  $('k-margin').className = 'kpi-val ' + (grossMargin >= 80 ? 'p' : grossMargin >= 60 ? 'w' : 'n');
+  
+  const ebitda = last.mrr - last.costs.total;
+  $('k-ebitda').textContent = fmtS(ebitda);
+  $('k-ebitda').className = 'kpi-val ' + (ebitda > 0 ? 'p' : 'n');
+  
+  const ebitdaMargin = last.mrr > 0 ? (ebitda / last.mrr) * 100 : 0;
+  const growthRate = ((base[m].mrr - base[m-1].mrr) / base[m-1].mrr) * 100;
+  const rule40 = growthRate + ebitdaMargin;
+  $('k-rule40').textContent = rule40.toFixed(0) + '%';
+  $('k-rule40').className = 'kpi-val ' + (rule40 >= 40 ? 'p' : rule40 >= 20 ? 'w' : 'n');
+
   $('k-ltv').textContent = ltv ? fmt(ltv) : '—';
   $('k-cac').textContent = cac ? fmt(cac) : '—';
 
   const ratioEl = $('k-ratio');
   if (ratio) { ratioEl.textContent = ratio.toFixed(1)+'x'; ratioEl.className = 'kpi-val '+(ratio>=3?'p':ratio>=1?'w':'n'); }
   else        { ratioEl.textContent = '—'; ratioEl.className = 'kpi-val'; }
-
-  let be = 'No alcanzado';
-  for (let i = 1; i <= m; i++) { if (base[i].acum >= 0) { be = 'Mes '+i; break; } }
-  $('k-be').textContent  = be;
-
-  const balEl = $('k-bal');
-  balEl.textContent = fmtS(last.acum);
-  balEl.className   = 'kpi-val '+(last.acum>=0?'p':'n');
 
   // Advisory
   updateAdvisory(p, ratio, ltv, cac, payback, base, m);
