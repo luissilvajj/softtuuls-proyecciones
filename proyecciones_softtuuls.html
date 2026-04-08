@@ -859,10 +859,18 @@ function actualizar() {
   $('k-ebitda').className = 'kpi-val ' + (ebitda > 0 ? 'p' : 'n');
   
   const ebitdaMargin = last.mrr > 0 ? (ebitda / last.mrr) * 100 : 0;
-  const growthRate = ((base[m].mrr - base[m-1].mrr) / base[m-1].mrr) * 100;
+  
+  // Growth Rate calculation with safety check
+  let growthRate = 0;
+  if (m > 0 && base[m-1].mrr > 0) {
+    growthRate = ((base[m].mrr - base[m-1].mrr) / base[m-1].mrr) * 100;
+  } else if (m > 0 && base[m].mrr > 0) {
+    growthRate = 100; // First month of revenue = 100% growth jump
+  }
+  
   const rule40 = growthRate + ebitdaMargin;
-  $('k-rule40').textContent = rule40.toFixed(0) + '%';
-  $('k-rule40').className = 'kpi-val ' + (rule40 >= 40 ? 'p' : rule40 >= 20 ? 'w' : 'n');
+  $('k-rule40').textContent = isFinite(rule40) ? rule40.toFixed(0) + '%' : '—';
+  $('k-rule40').className = 'kpi-val ' + (rule40 >= 40 ? 'p' : rule40 >= 20 ? 'w' : (rule40 < 0 ? 'n' : ''));
 
   $('k-ltv').textContent = ltv ? fmt(ltv) : '—';
   $('k-cac').textContent = cac ? fmt(cac) : '—';
