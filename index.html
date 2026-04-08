@@ -65,12 +65,15 @@
     .scen-btn.active .sd { color:var(--ts); }
 
     /* ── Controls ── */
-    .controls-wrap { display:grid; grid-template-columns:1fr 1fr 1fr; gap:2px; margin-bottom:18px; background:var(--bdr); border-radius:var(--r16); overflow:hidden; }
+    .controls-wrap { display:grid; grid-template-columns:repeat(2, 1fr); gap:1px; margin-bottom:18px; background:var(--bdr); border:1px solid var(--bdr); border-radius:var(--r16); overflow:hidden; }
     @media(max-width:960px){ .controls-wrap{grid-template-columns:1fr;} }
     .ctrl-sec { background:var(--s1); padding:20px 22px 24px; }
-    .ctrl-sec:first-child{border-radius:var(--r16) 0 0 var(--r16);}
-    .ctrl-sec:last-child {border-radius:0 var(--r16) var(--r16) 0;}
-    @media(max-width:960px){.ctrl-sec:first-child{border-radius:var(--r16) var(--r16) 0 0;}.ctrl-sec:last-child{border-radius:0 0 var(--r16) var(--r16);}}
+    @media(min-width:961px){
+      .ctrl-sec:nth-child(1){border-radius:var(--r16) 0 0 0;}
+      .ctrl-sec:nth-child(2){border-radius:0 var(--r16) 0 0;}
+      .ctrl-sec:nth-child(3){border-radius:0 0 0 var(--r16);}
+      .ctrl-sec:nth-child(4){border-radius:0 0 var(--r16) 0;}
+    }
     .ctrl-ttl { font-size:.58rem; font-weight:700; text-transform:uppercase; letter-spacing:1.3px; color:var(--accent); margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--bdr); }
     .ctrl-grid { display:flex; flex-direction:column; gap:13px; }
     .ctrl-lbl  { font-size:.64rem; font-weight:500; color:var(--tm); text-transform:uppercase; letter-spacing:.5px; margin-bottom:3px; display:block; }
@@ -330,6 +333,27 @@
           <div class="ctrl-val" id="v-tax">15%</div>
           <input type="range" id="tax" min="0" max="40" step="1" value="15" />
           <div class="ctrl-hint">Carga fiscal estimada sobre beneficios netos</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ctrl-sec">
+      <div class="ctrl-ttl">Gastos de operación y capital</div>
+      <div class="ctrl-grid">
+        <div>
+          <span class="ctrl-lbl">Inversión Inicial (Seniat + Tech)</span>
+          <div class="ctrl-val" id="v-inv">$10,200</div>
+          <input type="range" id="inv" min="1000" max="50000" step="500" value="10200" />
+        </div>
+        <div>
+          <span class="ctrl-lbl">Publicidad Digital Mensual</span>
+          <div class="ctrl-val" id="v-pub">$500</div>
+          <input type="range" id="pub" min="0" max="5000" step="100" value="500" />
+        </div>
+        <div>
+          <span class="ctrl-lbl">Contabilidad / Auditoría</span>
+          <div class="ctrl-val" id="v-conta">$300</div>
+          <input type="range" id="conta" min="0" max="1000" step="50" value="300" />
         </div>
       </div>
     </div>
@@ -754,14 +778,14 @@ function runModel(p, gF=1, chAdj=0, meses=12) {
 }
 
 function getParams() {
+  const v = (id) => { const el = $(id); return el ? +el.value : 0; };
   return {
-    inversion:+$('inv').value, precio:+$('precio').value,
-    c1:+$('c1').value,         crec:+$('crec').value, churn:+$('churn').value,
-    tax:+$('tax').value,
-    conta:300,   pub:500,   infra:+$('infra').value,
-    sal1:+$('s1').value, umbral1:+$('u1').value,
-    sal2:+$('s2').value, umbral2:+$('u2').value,
-    sal3:+$('s3').value, umbral3:+$('u3').value,
+    inversion: v('inv'), precio: v('precio'),
+    c1: v('c1'),         crec: v('crec'), churn: v('churn'),
+    tax: v('tax'),       conta: v('conta'),   pub: v('pub'),   infra: v('infra'),
+    sal1: v('s1'), umbral1: v('u1'),
+    sal2: v('s2'), umbral2: v('u2'),
+    sal3: v('s3'), umbral3: v('u3'),
   };
 }
 
@@ -798,6 +822,9 @@ function actualizar() {
   $('v-churn').textContent  = p.churn + '%';
   $('v-infra').textContent  = fmt(p.infra);
   $('v-tax').textContent    = p.tax + '%';
+  if($('v-inv'))   $('v-inv').textContent   = fmt(p.inversion);
+  if($('v-pub'))   $('v-pub').textContent   = fmt(p.pub);
+  if($('v-conta')) $('v-conta').textContent = fmt(p.conta);
   $('v-s1').textContent = fmt(p.sal1); $('v-u1').textContent = p.umbral1;
   $('v-s2').textContent = fmt(p.sal2); $('v-u2').textContent = p.umbral2;
   $('v-s3').textContent = fmt(p.sal3); $('v-u3').textContent = p.umbral3;
